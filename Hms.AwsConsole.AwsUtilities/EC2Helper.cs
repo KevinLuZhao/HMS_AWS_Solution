@@ -92,6 +92,48 @@ namespace Hms.AwsConsole.AwsUtilities
             };
             var response = client.CreateRoute(request);
         }
+
+        public async Task<Instance> LaunchInstances(
+            string subnetId, string amiId, string keyPairName, SecurityGroup mySG,
+            InstanceType instanceType, int max, int min, string privateIp = null)
+        {
+            List<string> groups = new List<string>() { mySG.GroupId };
+            var eni = new InstanceNetworkInterfaceSpecification()
+            {
+                DeviceIndex = 0,
+                SubnetId = subnetId,
+                Groups = groups,
+                AssociatePublicIpAddress = true
+            };
+            if (privateIp != null)
+            {
+                eni.PrivateIpAddress = privateIp;
+            }
+            List<InstanceNetworkInterfaceSpecification> enis = new List<InstanceNetworkInterfaceSpecification>() { eni };
+
+            var launchRequest = new RunInstancesRequest()
+            {
+                ImageId = amiId,
+                InstanceType = instanceType,
+                MinCount = min,
+                MaxCount = max,
+                KeyName = keyPairName,
+                NetworkInterfaces = enis
+            };
+
+            var response = await client.RunInstancesAsync(launchRequest);
+            return response.Reservation.Instances[0];
+        }
+
+        public void CreateSecurityGroup(string groupName, string vpcId)
+        {
+            CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
+            {
+                GroupName = groupName,
+                VpcId = vpcId
+            };
+            var response = client.CreateSecurityGroup(request);
+        }
         /*************************************************Find************************************************/
         internal Vpc FindVpc(string resourceTypeName)
         {
@@ -214,23 +256,7 @@ namespace Hms.AwsConsole.AwsUtilities
             };
             client.DisassociateRouteTable(request);
         }
-
-        internal async Task<RunInstancesResponse> LanchInstance(string imageId, string subnetId, InstanceType instanceType, string keypair)
-        {
-            RunInstancesRequest request = new RunInstancesRequest()
-            {
-                ImageId = imageId,
-                InstanceType = instanceType,
-                MaxCount = 1,
-                MinCount = 1,
-                SubnetId = subnetId,
-                KeyName = keypair
-            };
-            var response = await client.RunInstancesAsync(request);
-
-            return response;
-        }
-
+ 
         //internal List<Hms.AwsConsole.Model.Image> GetAMIs()
         //{
         //    var response = client.DescribeImages();

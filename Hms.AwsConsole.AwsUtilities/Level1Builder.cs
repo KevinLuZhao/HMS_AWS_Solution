@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hms.AwsConsole.Interfaces;
-using Amazon.EC2;
 using Amazon.EC2.Model;
+using Hms.AwsConsole.Model;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
@@ -37,8 +37,9 @@ namespace Hms.AwsConsole.AwsUtilities
             environment = env;
             ec2Helper = new EC2Helper(env, frm);
         }
-        public async Task<IEnumerable<string>> CreatVPC()
+        public async Task<InfraEntities> Creat()
         {
+            InfraEntities entities = new InfraEntities();
             /*//A good way to gernerate the VPC, but the problem is no way to know when it finish.
             LaunchVPCWithPublicSubnetRequest request = new LaunchVPCWithPublicSubnetRequest()
             {
@@ -54,16 +55,20 @@ namespace Hms.AwsConsole.AwsUtilities
             {
                 var responseVpc = await ec2Helper.CreateVpc(STR_VPC, CIDR_VPC);
                 var vpc = responseVpc.Vpc;
+                entities.VpcId = vpc.VpcId;
 
                 var responsePublicSubnet = await ec2Helper.CreateSubnet(vpc.VpcId, CIDR_PUBLIC_SUBNET, STR_PUBLIC_SUBNET);
                 var publicSubnet = responsePublicSubnet.Subnet;
+                entities.PublicSubnetId = publicSubnet.SubnetId;
 
                 var responsePrivateSubnet = await ec2Helper.CreateSubnet(vpc.VpcId, CIDR_PRIVATE_SUBNET, STR_PRIVATE_SUBNET);
                 var privateSubnet = responsePrivateSubnet.Subnet;
+                entities.PrivateSubnetId = privateSubnet.SubnetId;
                 /********************************************Internet Gateway********************************************/
 
                 var responseIgw = await ec2Helper.CreateInternetGateway(vpc.VpcId, STR_INTERNET_GATEWAY);
                 var igw = responseIgw.InternetGateway;
+                entities.InternetGatewayId = igw.InternetGatewayId;
 
                 /********************************************Nat Gateway********************************************/
                 //var requestNgw = new CreateNatGatewayRequest()
@@ -77,10 +82,10 @@ namespace Hms.AwsConsole.AwsUtilities
 
 
                 /********************************************Public Route Table********************************************/
-                CreatePublicRouteTable(vpc.VpcId, publicSubnet.SubnetId, STR_PUBLIC_ROUTETABLE, igw.InternetGatewayId);
-
-                await ec2Helper.LanchInstance("ami-4a8ba42f", publicSubnet.SubnetId, InstanceType.T2Micro, "hms_qa_keypair");
-                return null;
+                var publicRouteTable = CreatePublicRouteTable(vpc.VpcId, publicSubnet.SubnetId, STR_PUBLIC_ROUTETABLE, igw.InternetGatewayId);
+                //routeTable.Routes.Add()
+                entities.PublicRouteTableId = publicRouteTable.RouteTableId;
+                return entities;
             }
             catch (Exception ex)
             {
@@ -88,7 +93,7 @@ namespace Hms.AwsConsole.AwsUtilities
             }
         }
 
-        public async Task TeardownExistingVPC()
+        public async Task Teardown()
         {
             Vpc existingVpc = ec2Helper.FindVpc(STR_VPC);
 

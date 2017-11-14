@@ -52,6 +52,10 @@
       <Project>{c2673afe-7386-468b-84a0-2be069e49360}</Project>
       <Name>Hms.AwsConsole.Interfaces</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Hms.AwsConsole.Model\Hms.AwsConsole.Model.csproj">
+      <Project>{49e70a5c-0cd5-4f2c-94bb-fdb907262c8e}</Project>
+      <Name>Hms.AwsConsole.Model</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -55,6 +55,7 @@
     <Compile Include="CommonFuncs.cs" />
     <Compile Include="EC2Helper.cs" />
     <Compile Include="Level1Builder.cs" />
+    <Compile Include="Level2Builder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

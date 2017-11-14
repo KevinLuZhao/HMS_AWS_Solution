@@ -13,8 +13,9 @@ namespace Hms.AwsConsole.BLL
         public async Task CreateNewInfrastructure(string env, IWindowForm form)
         {
             Level1Builder level1 = new Level1Builder(env, form);
-            await level1.TeardownExistingVPC();
-            await level1.CreatVPC();
+            await level1.Teardown();
+            var response = await level1.Creat();
+            //response.
         }
     }
 }
