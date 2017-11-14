@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hms.AwsConsole.BLL", "Hms.A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hms.AwsConsole.Model", "Hms.AwsConsole.Model\Hms.AwsConsole.Model.csproj", "{49E70A5C-0CD5-4F2C-94BB-FDB907262C8E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hms.AwsConsole.DAL", "Hms.AwsConsole.DAL\Hms.AwsConsole.DAL.csproj", "{3E3121BF-15BA-41AA-97DB-88DA1D4EB2E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{49E70A5C-0CD5-4F2C-94BB-FDB907262C8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49E70A5C-0CD5-4F2C-94BB-FDB907262C8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49E70A5C-0CD5-4F2C-94BB-FDB907262C8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E3121BF-15BA-41AA-97DB-88DA1D4EB2E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E3121BF-15BA-41AA-97DB-88DA1D4EB2E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E3121BF-15BA-41AA-97DB-88DA1D4EB2E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E3121BF-15BA-41AA-97DB-88DA1D4EB2E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

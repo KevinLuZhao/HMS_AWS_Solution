@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Hms.AwsConsole.BLL</RootNamespace>
     <AssemblyName>Hms.AwsConsole.BLL</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,12 +42,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="InfraBuilder.cs" />
+    <Compile Include="InfraEntitiesServices.cs" />
+    <Compile Include="LogServices.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Hms.AwsConsole.AwsUtilities\Hms.AwsConsole.AwsUtilities.csproj">
       <Project>{d9976310-4244-456b-ab53-b10ad6d7a60d}</Project>
       <Name>Hms.AwsConsole.AwsUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Hms.AwsConsole.DAL\Hms.AwsConsole.DAL.csproj">
+      <Project>{3e3121bf-15ba-41aa-97db-88da1d4eb2e8}</Project>
+      <Name>Hms.AwsConsole.DAL</Name>
     </ProjectReference>
     <ProjectReference Include="..\Hms.AwsConsole.Interfaces\Hms.AwsConsole.Interfaces.csproj">
       <Project>{c2673afe-7386-468b-84a0-2be069e49360}</Project>

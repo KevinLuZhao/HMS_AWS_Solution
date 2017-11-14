@@ -16,6 +16,9 @@ namespace Hms.AwsConsole.BLL
             await level1.Teardown();
             var response = await level1.Creat();
             //response.
+
+            Level2Builder level2 = new Level2Builder(response, env, form);
+            await level2.Creat();
         }
     }
 }

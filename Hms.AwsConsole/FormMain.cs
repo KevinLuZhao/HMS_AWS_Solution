@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 using System.Windows.Forms;
 using Hms.AwsConsole.AwsUtilities;
 using Hms.AwsConsole.Interfaces;
@@ -13,33 +14,46 @@ using Hms.AwsConsole.BLL;
 
 namespace Hms.AwsConsole
 {
-    public partial class FormMain : Form, IWindowForm
+    public partial class FormMain : Form
     {
+        public ToolStripStatusLabel MainStatusStrip;
+        public List<FormMdiChildBase> OpendFormList = new List<FormMdiChildBase>();
         public FormMain()
         {
             InitializeComponent();
         }
 
-        public void ShowCallbackMessage(string message)
-        {
-            this.Invoke((MethodInvoker)delegate
-            {
-                txtMonitor.AppendText(DateTime.Now.ToString() + "\t");
-                txtMonitor.AppendText(message + Environment.NewLine);
-            });
+        private void FormMain_Load(object sender, EventArgs e)
+        {           
+            MainStatusStrip = toolStripStatusLabel1;
         }
 
-        private void FormMain_Load(object sender, EventArgs e)
+        private void OpenFormMenu_Click(object sender, EventArgs e)
         {
-            try
+            //If the form is already opened, just make it active.
+            foreach (var form in OpendFormList)
             {
-                InfraBuilder builder = new InfraBuilder();
-                button1.Click += new EventHandler(async (s, arg) => await builder.CreateNewInfrastructure("QA", this));
+                if (form.GetType().Name == ((ToolStripMenuItem)sender).Tag.ToString())
+                {
+                    form.Activate();
+                    return;
+                }
             }
-            catch (Exception ex)
+            FormMdiChildBase frm = OpenMDIChildForm(((ToolStripMenuItem)sender).Tag.ToString());
+            if (frm != null)
             {
-                MessageBox.Show(ex.Message + " Stack trace: " + ex.StackTrace);
+                OpendFormList.Add(frm);
+                frm.MdiParent = this;
+                //frm.Activate();
+                frm.Show();
+                frm.WindowState = FormWindowState.Maximized;
             }
-        }      
+        }
+
+        private FormMdiChildBase OpenMDIChildForm(string formName)
+        {
+            FormMdiChildBase frm = (FormMdiChildBase)(Activator.CreateInstance(this.AccessibleName, "Hms.AwsConsole."+formName).Unwrap());
+            return frm;
+        }
     }
 }

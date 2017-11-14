@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C2673AFE-7386-468B-84A0-2BE069E49360}</ProjectGuid>
+    <ProjectGuid>{3E3121BF-15BA-41AA-97DB-88DA1D4EB2E8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Hms.AwsConsole.Interfaces</RootNamespace>
-    <AssemblyName>Hms.AwsConsole.Interfaces</AssemblyName>
+    <RootNamespace>Hms.AwsConsole.DAL</RootNamespace>
+    <AssemblyName>Hms.AwsConsole.DAL</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -41,8 +41,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IWindowForm.cs" />
+    <Compile Include="InfraEntitiesDb.cs" />
+    <Compile Include="LogDb.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Hms.AwsConsole.AwsUtilities\Hms.AwsConsole.AwsUtilities.csproj">
+      <Project>{d9976310-4244-456b-ab53-b10ad6d7a60d}</Project>
+      <Name>Hms.AwsConsole.AwsUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Hms.AwsConsole.Model\Hms.AwsConsole.Model.csproj">
+      <Project>{49e70a5c-0cd5-4f2c-94bb-fdb907262c8e}</Project>
+      <Name>Hms.AwsConsole.Model</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
