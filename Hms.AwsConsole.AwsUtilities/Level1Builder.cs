@@ -24,7 +24,7 @@ namespace Hms.AwsConsole.AwsUtilities
         const string STR_PRIVATE_SUBNET = "Private_Subnet";
         const string STR_INTERNET_GATEWAY = "Internet_Gateway";
         const string STR_NAT_GATEWAY = "NAT_Gateway";
-        const string STR_PUBLIC_ROUTETABLE = "NAT_Gateway";
+        const string STR_PUBLIC_ROUTETABLE = "Public_RouteTable";
         //const string STR_PUBLIC_ROUTETABLE = "Public_Routetable";
         const string CIDR_VPC = "10.82.128.0/26";
         const string CIDR_PUBLIC_SUBNET = "10.82.128.0/27";
@@ -57,11 +57,11 @@ namespace Hms.AwsConsole.AwsUtilities
                 var vpc = responseVpc.Vpc;
                 entities.VpcId = vpc.VpcId;
 
-                var responsePublicSubnet = await ec2Helper.CreateSubnet(vpc.VpcId, CIDR_PUBLIC_SUBNET, STR_PUBLIC_SUBNET);
+                var responsePublicSubnet = await ec2Helper.CreateSubnet(vpc.VpcId, STR_PUBLIC_SUBNET, CIDR_PUBLIC_SUBNET);
                 var publicSubnet = responsePublicSubnet.Subnet;
                 entities.PublicSubnetId = publicSubnet.SubnetId;
 
-                var responsePrivateSubnet = await ec2Helper.CreateSubnet(vpc.VpcId, CIDR_PRIVATE_SUBNET, STR_PRIVATE_SUBNET);
+                var responsePrivateSubnet = await ec2Helper.CreateSubnet(vpc.VpcId, STR_PRIVATE_SUBNET, CIDR_PRIVATE_SUBNET);
                 var privateSubnet = responsePrivateSubnet.Subnet;
                 entities.PrivateSubnetId = privateSubnet.SubnetId;
                 /********************************************Internet Gateway********************************************/

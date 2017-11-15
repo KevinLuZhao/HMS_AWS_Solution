@@ -36,6 +36,10 @@ namespace Hms.AwsConsole
 
         private void FormHmsSystem_Load(object sender, EventArgs e)
         {
+            InfraBuilder builder = new InfraBuilder();
+            btnCreate.Click += new EventHandler(
+                async (s, arg) => await builder.CreateNewInfrastructure(GlobalVariables.Enviroment.ToString(), this));
+
             tsComboEnv.ComboBox.DataSource = Enum.GetValues(typeof(Model.Environment));
             tsComboEnv.SelectedIndex = 1;
             //tsComboColor.ComboBox.DataSource = Enum.GetValues(typeof(Model.Color));
@@ -49,19 +53,6 @@ namespace Hms.AwsConsole
             tsComboRegion.Enabled = false;
         }
 
-        private void btnCreate_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                InfraBuilder builder = new InfraBuilder();
-                btnCreate.Click += new EventHandler(
-                    async (s, arg) => await builder.CreateNewInfrastructure(GlobalVariables.Enviroment.ToString(), this));
-            }
-            catch (Exception ex)
-            {
-                LogServices.WriteLog(
-                    ex.Message + " Stack trace: " + ex.StackTrace, LogType.Error, tsComboEnv.SelectedItem.ToString());
-            }
-        }
+        
     }
 }

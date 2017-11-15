@@ -97,12 +97,12 @@ namespace Hms.AwsConsole.AwsUtilities
             string subnetId, string amiId, string keyPairName, SecurityGroup mySG,
             InstanceType instanceType, int max, int min, string privateIp = null)
         {
-            List<string> groups = new List<string>() { mySG.GroupId };
+            //List<string> groups = new List<string>() { mySG.GroupId };
             var eni = new InstanceNetworkInterfaceSpecification()
             {
                 DeviceIndex = 0,
                 SubnetId = subnetId,
-                Groups = groups,
+                //Groups = groups,
                 AssociatePublicIpAddress = true
             };
             if (privateIp != null)
