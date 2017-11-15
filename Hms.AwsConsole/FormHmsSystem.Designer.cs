@@ -30,6 +30,7 @@
         {
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.btnCreate = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.cboxLevel1 = new System.Windows.Forms.CheckBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -43,7 +44,9 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
             this.tsComboColor = new System.Windows.Forms.ToolStripComboBox();
-            this.btnCreate = new System.Windows.Forms.Button();
+            this.cboxLevel2 = new System.Windows.Forms.CheckBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.ddlWebServerAMI = new System.Windows.Forms.ComboBox();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -63,6 +66,9 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.ddlWebServerAMI);
+            this.tabPage1.Controls.Add(this.label2);
+            this.tabPage1.Controls.Add(this.cboxLevel2);
             this.tabPage1.Controls.Add(this.btnCreate);
             this.tabPage1.Controls.Add(this.label1);
             this.tabPage1.Controls.Add(this.cboxLevel1);
@@ -73,6 +79,15 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Application Infrastructure";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // btnCreate
+            // 
+            this.btnCreate.Location = new System.Drawing.Point(36, 238);
+            this.btnCreate.Name = "btnCreate";
+            this.btnCreate.Size = new System.Drawing.Size(75, 23);
+            this.btnCreate.TabIndex = 2;
+            this.btnCreate.Text = "Create";
+            this.btnCreate.UseVisualStyleBackColor = true;
             // 
             // label1
             // 
@@ -86,11 +101,12 @@
             // cboxLevel1
             // 
             this.cboxLevel1.AutoSize = true;
+            this.cboxLevel1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cboxLevel1.Location = new System.Drawing.Point(36, 23);
             this.cboxLevel1.Name = "cboxLevel1";
-            this.cboxLevel1.Size = new System.Drawing.Size(58, 17);
+            this.cboxLevel1.Size = new System.Drawing.Size(68, 17);
             this.cboxLevel1.TabIndex = 0;
-            this.cboxLevel1.Text = "Level1";
+            this.cboxLevel1.Text = "Level 1";
             this.cboxLevel1.UseVisualStyleBackColor = true;
             // 
             // tabPage2
@@ -174,14 +190,33 @@
             this.tsComboColor.Name = "tsComboColor";
             this.tsComboColor.Size = new System.Drawing.Size(75, 25);
             // 
-            // btnCreate
+            // cboxLevel2
             // 
-            this.btnCreate.Location = new System.Drawing.Point(36, 238);
-            this.btnCreate.Name = "btnCreate";
-            this.btnCreate.Size = new System.Drawing.Size(75, 23);
-            this.btnCreate.TabIndex = 2;
-            this.btnCreate.Text = "Create";
-            this.btnCreate.UseVisualStyleBackColor = true;
+            this.cboxLevel2.AutoSize = true;
+            this.cboxLevel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cboxLevel2.Location = new System.Drawing.Point(36, 63);
+            this.cboxLevel2.Name = "cboxLevel2";
+            this.cboxLevel2.Size = new System.Drawing.Size(68, 17);
+            this.cboxLevel2.TabIndex = 3;
+            this.cboxLevel2.Text = "Level 2";
+            this.cboxLevel2.UseVisualStyleBackColor = true;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(36, 87);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(86, 13);
+            this.label2.TabIndex = 4;
+            this.label2.Text = "Web Server AMI";
+            // 
+            // ddlWebServerAMI
+            // 
+            this.ddlWebServerAMI.FormattingEnabled = true;
+            this.ddlWebServerAMI.Location = new System.Drawing.Point(138, 87);
+            this.ddlWebServerAMI.Name = "ddlWebServerAMI";
+            this.ddlWebServerAMI.Size = new System.Drawing.Size(121, 21);
+            this.ddlWebServerAMI.TabIndex = 5;
             // 
             // FormHmsSystem
             // 
@@ -222,5 +257,8 @@
         private System.Windows.Forms.ToolStripLabel toolStripLabel3;
         private System.Windows.Forms.ToolStripComboBox tsComboColor;
         private System.Windows.Forms.Button btnCreate;
+        private System.Windows.Forms.CheckBox cboxLevel2;
+        private System.Windows.Forms.ComboBox ddlWebServerAMI;
+        private System.Windows.Forms.Label label2;
     }
 }

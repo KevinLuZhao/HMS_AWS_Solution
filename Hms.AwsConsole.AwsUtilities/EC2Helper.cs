@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Amazon.EC2;
+﻿using Amazon.EC2;
 using Amazon.EC2.Model;
-using Amazon.EC2.Util;
+//using Amazon.EC2.Util;
 using Hms.AwsConsole.Interfaces;
-//using Hms.AwsConsole.Model;
+using Hms.AwsConsole.Model;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
@@ -16,16 +13,6 @@ namespace Hms.AwsConsole.AwsUtilities
         private AmazonEC2Client client;
         IWindowForm monitorForm;
         string environment;
-
-        //const string STR_VPC = "VPC";
-        //const string STR_PUBLIC_SUBNET = "Public_Subnet";
-        //const string STR_PRIVATE_SUBNET = "Private_Subnet";
-        //const string STR_INTERNET_GATEWAY = "Internet_Gateway";
-        //const string STR_NAT_GATEWAY = "NAT_Gateway";
-        //const string STR_PUBLIC_ROUTETABLE = "NAT_Gateway";
-        //const string CIDR_VPC = "10.82.128.0/26";
-        //const string CIDR_PUBLIC_SUBNET = "10.82.128.0/27";
-        //const string CIDR_PRIVATE_SUBNET = "10.82.128.32/27";
         const string CIDR_ALL = "0.0.0.0/0";
 
         /*************************************************Create************************************************/
@@ -68,6 +55,19 @@ namespace Hms.AwsConsole.AwsUtilities
             };
             var responseAttachIgw = await client.AttachInternetGatewayAsync(requestIgw);
             monitorForm.ShowCallbackMessage($"{igwId} is attached to {vpcId}.");
+            return response;
+        }
+
+        internal async Task<CreateNatGatewayResponse> CreateNatGateway(string subnetId, string allocationId, string resourceTypeName)
+        {
+            var request = new CreateNatGatewayRequest()
+            {
+                SubnetId = subnetId,
+                AllocationId = allocationId
+            };
+            var response = await client.CreateNatGatewayAsync(request);
+            AssignNameToResource(response.NatGateway.NatGatewayId, resourceTypeName);
+
             return response;
         }
 
@@ -182,6 +182,22 @@ namespace Hms.AwsConsole.AwsUtilities
             return ret;
         }
 
+        internal NatGateway FindNatGateway(string resourceTypeName)
+        {
+            NatGateway ret = null;
+            var request = new DescribeNatGatewaysRequest();
+            var response = client.DescribeNatGateways(request);
+            foreach (var item in response.NatGateways)
+            {
+                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
+                {
+                    ret = item;
+                    break;
+                }
+            }
+            return ret;
+        }
+
         internal RouteTable FindRouteTable(string resourceTypeName)
         {
             RouteTable ret = null;
@@ -193,6 +209,18 @@ namespace Hms.AwsConsole.AwsUtilities
                     ret = item;
                     break;
                 }
+            }
+            return ret;
+        }
+
+        public List<ImageModel> GetImageList()
+        {
+            var ret = new List<ImageModel>();
+            DescribeImagesRequest request = new DescribeImagesRequest() { Owners = new List<string> { "157799504602" } };
+            var response = client.DescribeImages(request);
+            foreach (var image in response.Images)
+            {
+                ret.Add(new ImageModel { AmiId = image.ImageId, Name = image.Name });
             }
             return ret;
         }
@@ -228,6 +256,29 @@ namespace Hms.AwsConsole.AwsUtilities
                 $"Internet Gateway {igw.InternetGatewayId}|{(igw.Tags.Find(o => o.Key == "Name")).Value} is deleted");
         }
 
+        internal async Task DeleteNatGateway(NatGateway ngw, string vpcId)
+        {
+            string associationId = null;
+            DescribeAddressesRequest request2 = new DescribeAddressesRequest();
+            var response2 = client.DescribeAddresses(request2);
+            foreach (var address in response2.Addresses)
+            {
+                if (address.PublicIp == "18.220.208.101")
+                {
+                    associationId = address.AssociationId;
+                    break;
+                }
+            }
+            //var x = new AllocateAddressRequest() {  }
+            //client.AllocateAddress()
+            var request1 = new DisassociateAddressRequest() { PublicIp = "18.220.208.101", AssociationId = associationId };
+            client.DisassociateAddress(request1);
+            var request = new DeleteNatGatewayRequest() { NatGatewayId = ngw.NatGatewayId };
+            await client.DeleteNatGatewayAsync(request);
+            monitorForm.ShowCallbackMessage(
+                $"NAT Gateway {ngw.NatGatewayId}|{(ngw.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+        }
+
         internal async Task DeleteRouteTable(RouteTable routeTable)
         {
             var request = new DeleteRouteTableRequest() { RouteTableId = routeTable.RouteTableId };
@@ -256,7 +307,7 @@ namespace Hms.AwsConsole.AwsUtilities
             };
             client.DisassociateRouteTable(request);
         }
- 
+
         //internal List<Hms.AwsConsole.Model.Image> GetAMIs()
         //{
         //    var response = client.DescribeImages();

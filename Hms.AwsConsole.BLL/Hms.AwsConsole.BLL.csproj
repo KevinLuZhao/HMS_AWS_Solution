@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AMIServices.cs" />
     <Compile Include="InfraBuilder.cs" />
     <Compile Include="InfraEntitiesServices.cs" />
     <Compile Include="LogServices.cs" />

@@ -25,7 +25,7 @@ namespace Hms.AwsConsole.AwsUtilities
         const string STR_INTERNET_GATEWAY = "Internet_Gateway";
         const string STR_NAT_GATEWAY = "NAT_Gateway";
         const string STR_PUBLIC_ROUTETABLE = "Public_RouteTable";
-        //const string STR_PUBLIC_ROUTETABLE = "Public_Routetable";
+        const string STR_PRIVATE_ROUTETABLE = "Private_Routetable";
         const string CIDR_VPC = "10.82.128.0/26";
         const string CIDR_PUBLIC_SUBNET = "10.82.128.0/27";
         const string CIDR_PRIVATE_SUBNET = "10.82.128.32/27";
@@ -40,6 +40,7 @@ namespace Hms.AwsConsole.AwsUtilities
         public async Task<InfraEntities> Creat()
         {
             InfraEntities entities = new InfraEntities();
+            entities.Environment = environment;
             /*//A good way to gernerate the VPC, but the problem is no way to know when it finish.
             LaunchVPCWithPublicSubnetRequest request = new LaunchVPCWithPublicSubnetRequest()
             {
@@ -64,27 +65,25 @@ namespace Hms.AwsConsole.AwsUtilities
                 var responsePrivateSubnet = await ec2Helper.CreateSubnet(vpc.VpcId, STR_PRIVATE_SUBNET, CIDR_PRIVATE_SUBNET);
                 var privateSubnet = responsePrivateSubnet.Subnet;
                 entities.PrivateSubnetId = privateSubnet.SubnetId;
-                /********************************************Internet Gateway********************************************/
 
+                /******************************************** Internet Gateway ********************************************/
                 var responseIgw = await ec2Helper.CreateInternetGateway(vpc.VpcId, STR_INTERNET_GATEWAY);
                 var igw = responseIgw.InternetGateway;
                 entities.InternetGatewayId = igw.InternetGatewayId;
 
-                /********************************************Nat Gateway********************************************/
-                //var requestNgw = new CreateNatGatewayRequest()
-                //{
-                //    SubnetId = publicSubnetId,
+                /******************************************** Nat Gateway ********************************************/
+                var responseNgw = await ec2Helper.CreateNatGateway(privateSubnet.SubnetId, "eipalloc-bf81d491", STR_PRIVATE_ROUTETABLE);
+                var ngw = responseNgw.NatGateway;
+                entities.NatGatewayId = ngw.NatGatewayId;
 
-                //};
-                //var responsengw = await client.CreateNatGatewayAsync(requestNgw);
-                //var ngwId = responseIgw.InternetGateway.InternetGatewayId;
-                //AssignNameToResource(igwId, STR_NAT_GATEWAY);
-
-
-                /********************************************Public Route Table********************************************/
-                var publicRouteTable = CreatePublicRouteTable(vpc.VpcId, publicSubnet.SubnetId, STR_PUBLIC_ROUTETABLE, igw.InternetGatewayId);
-                //routeTable.Routes.Add()
+                /******************************************** Public Route Table ********************************************/
+                var publicRouteTable = CreatePublicRouteTable(vpc.VpcId, publicSubnet.SubnetId, igw.InternetGatewayId);
                 entities.PublicRouteTableId = publicRouteTable.RouteTableId;
+
+                /******************************************** Private Route Table ********************************************/
+                var privateRouteTable = CreatePrivateRouteTable(vpc.VpcId, privateSubnet.SubnetId, ngw.NatGatewayId);
+                entities.PrivateRouteTableId = privateRouteTable.RouteTableId;
+
                 return entities;
             }
             catch (Exception ex)
@@ -103,6 +102,8 @@ namespace Hms.AwsConsole.AwsUtilities
                 var privateSubnet = ec2Helper.FindSubnet(STR_PRIVATE_SUBNET);
                 var publicRouteTable = ec2Helper.FindRouteTable(STR_PUBLIC_ROUTETABLE);
                 var internetGateway = ec2Helper.FindInternetGateway(STR_INTERNET_GATEWAY);
+                var natGateway = ec2Helper.FindNatGateway(STR_NAT_GATEWAY);
+                var privateRouteTable = ec2Helper.FindRouteTable(STR_PRIVATE_ROUTETABLE);
 
                 if (publicRouteTable != null && publicSubnet != null)
                 {
@@ -110,9 +111,20 @@ namespace Hms.AwsConsole.AwsUtilities
                     await ec2Helper.DeleteRouteTable(publicRouteTable);
                 }
 
+                if (privateRouteTable != null && privateSubnet != null)
+                {
+                    ec2Helper.DisassociateRouteTableToSubnet(privateRouteTable, privateSubnet);
+                    await ec2Helper.DeleteRouteTable(privateRouteTable);
+                }
+
                 if (internetGateway != null)
                 {
                     await ec2Helper.DeleteInternetGateway(internetGateway, existingVpc.VpcId);
+                }
+
+                if (natGateway != null)
+                {
+                    await ec2Helper.DeleteNatGateway(natGateway, existingVpc.VpcId);
                 }
 
                 if (publicSubnet != null)
@@ -129,12 +141,21 @@ namespace Hms.AwsConsole.AwsUtilities
             }
         }
 
-        private RouteTable CreatePublicRouteTable(string vpcId, string subnetId, string name, string igwId)
+        private RouteTable CreatePublicRouteTable(string vpcId, string subnetId, string igwId)
         {
-            var response = ec2Helper.CreateRouteTable(vpcId, name);
+            var response = ec2Helper.CreateRouteTable(vpcId, STR_PUBLIC_ROUTETABLE);
             ec2Helper.CreateRouteForRouteTable(igwId, response.RouteTableId);
             ec2Helper.AssociateRouteTableToSubnet(subnetId, response.RouteTableId);
             monitorForm.ShowCallbackMessage($"Public route table is created.");
+            return response;
+        }
+
+        private RouteTable CreatePrivateRouteTable(string vpcId, string subnetId, string ngwId)
+        {
+            var response = ec2Helper.CreateRouteTable(vpcId, STR_PRIVATE_ROUTETABLE);
+            response.Routes.Add(new Route { DestinationCidrBlock = "0.0.0.0/0", NatGatewayId = ngwId });
+            ec2Helper.AssociateRouteTableToSubnet(subnetId, response.RouteTableId);
+            monitorForm.ShowCallbackMessage($"Private route table is created.");
             return response;
         }
     }

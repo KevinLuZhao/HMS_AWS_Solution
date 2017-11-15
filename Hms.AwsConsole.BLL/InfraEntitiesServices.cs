@@ -10,5 +10,11 @@ namespace Hms.AwsConsole.BLL
 {
     public class InfraEntitiesServices
     {
+        InfraEntitiesDb db = new InfraEntitiesDb();
+
+        public void SaveInfraEntities(InfraEntities item)
+        {
+            db.Save(item);
+        }
     }
 }
