@@ -258,21 +258,6 @@ namespace Hms.AwsConsole.AwsUtilities
 
         internal async Task DeleteNatGateway(NatGateway ngw, string vpcId)
         {
-            string associationId = null;
-            DescribeAddressesRequest request2 = new DescribeAddressesRequest();
-            var response2 = client.DescribeAddresses(request2);
-            foreach (var address in response2.Addresses)
-            {
-                if (address.PublicIp == "18.220.208.101")
-                {
-                    associationId = address.AssociationId;
-                    break;
-                }
-            }
-            //var x = new AllocateAddressRequest() {  }
-            //client.AllocateAddress()
-            var request1 = new DisassociateAddressRequest() { PublicIp = "18.220.208.101", AssociationId = associationId };
-            client.DisassociateAddress(request1);
             var request = new DeleteNatGatewayRequest() { NatGatewayId = ngw.NatGatewayId };
             await client.DeleteNatGatewayAsync(request);
             monitorForm.ShowCallbackMessage(
@@ -306,6 +291,26 @@ namespace Hms.AwsConsole.AwsUtilities
                 AssociationId = routeTable.Associations.Find(o => o.SubnetId == subnet.SubnetId).RouteTableAssociationId
             };
             client.DisassociateRouteTable(request);
+        }
+
+        internal void DisassociateAddress(string ip)
+        {
+            string associationId = null;
+            DescribeAddressesRequest request1 = new DescribeAddressesRequest();
+            var response = client.DescribeAddresses(request1);
+            foreach (var address in response.Addresses)
+            {
+                if (address.PublicIp == ip)
+                {
+                    associationId = address.AssociationId;
+                    break;
+                }
+            }
+            if (associationId !=null)
+            {
+                var request2 = new DisassociateAddressRequest() { AssociationId = associationId };
+                client.DisassociateAddress(request2);
+            }        
         }
 
         //internal List<Hms.AwsConsole.Model.Image> GetAMIs()

@@ -72,7 +72,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 entities.InternetGatewayId = igw.InternetGatewayId;
 
                 /******************************************** Nat Gateway ********************************************/
-                var responseNgw = await ec2Helper.CreateNatGateway(privateSubnet.SubnetId, "eipalloc-bf81d491", STR_PRIVATE_ROUTETABLE);
+                var responseNgw = await ec2Helper.CreateNatGateway(privateSubnet.SubnetId, "eipalloc-bf81d491", STR_NAT_GATEWAY);
                 var ngw = responseNgw.NatGateway;
                 entities.NatGatewayId = ngw.NatGatewayId;
 
@@ -105,6 +105,13 @@ namespace Hms.AwsConsole.AwsUtilities
                 var natGateway = ec2Helper.FindNatGateway(STR_NAT_GATEWAY);
                 var privateRouteTable = ec2Helper.FindRouteTable(STR_PRIVATE_ROUTETABLE);
 
+                /*Notice the order:
+                 Before delete a Internet Gateway must disaasociate the public IP, or Elastic IP from VPC, 
+                 otherwise may get error: Network vpc-80fa87ef has some mapped public address(es). Please unmap those public address(es) before detaching the gateway.
+                 Before disassociate the address, you must delete the Nat gateway which associate with the Elastic IP
+                 Otherwise may get error: You do not have permission to access the specified resource. 
+                 */
+
                 if (publicRouteTable != null && publicSubnet != null)
                 {
                     ec2Helper.DisassociateRouteTableToSubnet(publicRouteTable, publicSubnet);
@@ -117,14 +124,16 @@ namespace Hms.AwsConsole.AwsUtilities
                     await ec2Helper.DeleteRouteTable(privateRouteTable);
                 }
 
-                if (internetGateway != null)
-                {
-                    await ec2Helper.DeleteInternetGateway(internetGateway, existingVpc.VpcId);
-                }
-
                 if (natGateway != null)
                 {
                     await ec2Helper.DeleteNatGateway(natGateway, existingVpc.VpcId);
+                }
+
+                ec2Helper.DisassociateAddress("18.220.208.101");
+
+                if (internetGateway != null)
+                {
+                    await ec2Helper.DeleteInternetGateway(internetGateway, existingVpc.VpcId);
                 }
 
                 if (publicSubnet != null)
