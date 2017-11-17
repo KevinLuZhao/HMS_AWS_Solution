@@ -19,9 +19,6 @@ namespace Hms.AwsConsole.AwsUtilities
             Amazon.Runtime.AWSCredentials credentials = new Amazon.Runtime.StoredProfileAWSCredentials(profile.ToString());
             this.Environment = profile;
             client = new AmazonRDSClient(credentials, AwsCommon.GetRetionEndpoint(region));
-            //client = new AmazonRDSClient(
-            //    CredentiaslManager.GetCredential(profile),
-            //    AwsCommon.GetRetionEndpoint(region));
         }
 
         public AwsRdsInstance GetRDSInstance()
@@ -96,16 +93,29 @@ namespace Hms.AwsConsole.AwsUtilities
 
         public async Task CreatInstance()
         {
-            CreateDBSubnetGroupRequest req0 = new CreateDBSubnetGroupRequest()
-            {
-                 DBSubnetGroupName = "HmsRdsSub",
-                  //SubnetIds
-            };
-            CreateDBSubnetGroupRequest req1 = new CreateDBSubnetGroupRequest { };
             var request = new CreateDBInstanceRequest()
             {
-                
+                DBInstanceIdentifier = FormatresourceName("DBInstance"),
+                 Domain= "safemail.local",
+                  Engine="sqlserver-ee",
+                   
             };
+
+
+        }
+
+        public async Task CreateDBSubnetGroup()
+        {
+            var request = new CreateDBSubnetGroupRequest()
+            {
+                DBSubnetGroupName = "",
+                SubnetIds = null
+            };
+             
+        }
+        private string FormatresourceName(string name)
+        {
+            return $"HMS_RDS_{Environment}_{name}";
         }
     }
 }
