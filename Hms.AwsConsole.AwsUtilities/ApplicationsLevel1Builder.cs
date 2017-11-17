@@ -7,17 +7,11 @@ using Hms.AwsConsole.Model;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
-    public class Level1Builder
+    public class ApplicationsLevel1Builder
     {
         IWindowForm monitorForm;
         string environment;
         EC2Helper ec2Helper;
-
-        //Vpc vpc = null;
-        //Subnet publicSubnet = null;
-        //Subnet privateSubnet = null;
-        //InternetGateway igw = null;
-        //NatGateway ngw = null;
 
         const string STR_VPC = "VPC";
         const string STR_PUBLIC_SUBNET = "Public_Subnet";
@@ -31,7 +25,7 @@ namespace Hms.AwsConsole.AwsUtilities
         const string CIDR_PRIVATE_SUBNET = "10.82.128.32/27";
         const string CIDR_ALL = "0.0.0.0/0";
 
-        public Level1Builder(string env, IWindowForm frm)
+        public ApplicationsLevel1Builder(string env, IWindowForm frm)
         {
             monitorForm = frm;
             environment = env;

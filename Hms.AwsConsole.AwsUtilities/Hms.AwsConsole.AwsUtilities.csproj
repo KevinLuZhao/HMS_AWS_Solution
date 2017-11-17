@@ -59,10 +59,11 @@
   <ItemGroup>
     <Compile Include="AwsCommon.cs" />
     <Compile Include="CommonFuncs.cs" />
+    <Compile Include="DBLevel1InfraBuilder.cs" />
     <Compile Include="DynamoDBHelper.cs" />
     <Compile Include="EC2Helper.cs" />
-    <Compile Include="Level1Builder.cs" />
-    <Compile Include="Level2Builder.cs" />
+    <Compile Include="ApplicationsLevel1Builder.cs" />
+    <Compile Include="ApplicationsLevel2Builder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RDSHelper.cs" />
   </ItemGroup>

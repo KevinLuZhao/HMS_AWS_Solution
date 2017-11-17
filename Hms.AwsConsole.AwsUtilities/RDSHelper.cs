@@ -93,5 +93,19 @@ namespace Hms.AwsConsole.AwsUtilities
             request.DBInstanceIdentifier = instanceIdentifier;
             var response = await client.ModifyDBInstanceAsync(request);
         }
+
+        public async Task CreatInstance()
+        {
+            CreateDBSubnetGroupRequest req0 = new CreateDBSubnetGroupRequest()
+            {
+                 DBSubnetGroupName = "HmsRdsSub",
+                  //SubnetIds
+            };
+            CreateDBSubnetGroupRequest req1 = new CreateDBSubnetGroupRequest { };
+            var request = new CreateDBInstanceRequest()
+            {
+                
+            };
+        }
     }
 }

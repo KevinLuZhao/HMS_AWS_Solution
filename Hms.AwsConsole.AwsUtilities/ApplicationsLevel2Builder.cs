@@ -10,14 +10,14 @@ using Amazon.EC2;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
-    public class Level2Builder
+    public class ApplicationsLevel2Builder
     {
         IWindowForm monitorForm;
         string environment;
         EC2Helper ec2Helper;
         InfraEntities entities;
 
-        public Level2Builder(InfraEntities entities, string env, IWindowForm frm)
+        public ApplicationsLevel2Builder(InfraEntities entities, string env, IWindowForm frm)
         {
             monitorForm = frm;
             environment = env;
