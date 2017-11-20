@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +21,9 @@ namespace Hms.AwsConsole.BLL
                 //service.SaveInfraEntities(response);
                 //Level2Builder level2 = new Level2Builder(response, env, form);
                 //await level2.Creat();
+                DBLevel1InfraBuilder level1 = 
+                    new DBLevel1InfraBuilder((Model.Environment)Enum.Parse(typeof(Model.Environment), env), form);
+                level1.Creat();
             }
             catch (Exception ex)
             {

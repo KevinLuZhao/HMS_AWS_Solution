@@ -30,6 +30,9 @@
         {
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.ddlWebServerAMI = new System.Windows.Forms.ComboBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.cboxLevel2 = new System.Windows.Forms.CheckBox();
             this.btnCreate = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.cboxLevel1 = new System.Windows.Forms.CheckBox();
@@ -44,11 +47,10 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
             this.tsComboColor = new System.Windows.Forms.ToolStripComboBox();
-            this.cboxLevel2 = new System.Windows.Forms.CheckBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.ddlWebServerAMI = new System.Windows.Forms.ComboBox();
+            this.btnCreateRDS = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.tabPage2.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -79,6 +81,34 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Application Infrastructure";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // ddlWebServerAMI
+            // 
+            this.ddlWebServerAMI.FormattingEnabled = true;
+            this.ddlWebServerAMI.Location = new System.Drawing.Point(138, 87);
+            this.ddlWebServerAMI.Name = "ddlWebServerAMI";
+            this.ddlWebServerAMI.Size = new System.Drawing.Size(121, 21);
+            this.ddlWebServerAMI.TabIndex = 5;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(36, 87);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(86, 13);
+            this.label2.TabIndex = 4;
+            this.label2.Text = "Web Server AMI";
+            // 
+            // cboxLevel2
+            // 
+            this.cboxLevel2.AutoSize = true;
+            this.cboxLevel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cboxLevel2.Location = new System.Drawing.Point(36, 63);
+            this.cboxLevel2.Name = "cboxLevel2";
+            this.cboxLevel2.Size = new System.Drawing.Size(68, 17);
+            this.cboxLevel2.TabIndex = 3;
+            this.cboxLevel2.Text = "Level 2";
+            this.cboxLevel2.UseVisualStyleBackColor = true;
             // 
             // btnCreate
             // 
@@ -111,6 +141,7 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.btnCreateRDS);
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
@@ -190,33 +221,15 @@
             this.tsComboColor.Name = "tsComboColor";
             this.tsComboColor.Size = new System.Drawing.Size(75, 25);
             // 
-            // cboxLevel2
+            // btnCreateRDS
             // 
-            this.cboxLevel2.AutoSize = true;
-            this.cboxLevel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cboxLevel2.Location = new System.Drawing.Point(36, 63);
-            this.cboxLevel2.Name = "cboxLevel2";
-            this.cboxLevel2.Size = new System.Drawing.Size(68, 17);
-            this.cboxLevel2.TabIndex = 3;
-            this.cboxLevel2.Text = "Level 2";
-            this.cboxLevel2.UseVisualStyleBackColor = true;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(36, 87);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(86, 13);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "Web Server AMI";
-            // 
-            // ddlWebServerAMI
-            // 
-            this.ddlWebServerAMI.FormattingEnabled = true;
-            this.ddlWebServerAMI.Location = new System.Drawing.Point(138, 87);
-            this.ddlWebServerAMI.Name = "ddlWebServerAMI";
-            this.ddlWebServerAMI.Size = new System.Drawing.Size(121, 21);
-            this.ddlWebServerAMI.TabIndex = 5;
+            this.btnCreateRDS.Location = new System.Drawing.Point(16, 255);
+            this.btnCreateRDS.Name = "btnCreateRDS";
+            this.btnCreateRDS.Size = new System.Drawing.Size(119, 23);
+            this.btnCreateRDS.TabIndex = 0;
+            this.btnCreateRDS.Text = "Create Database Infra";
+            this.btnCreateRDS.UseVisualStyleBackColor = true;
+            this.btnCreateRDS.Click += new System.EventHandler(this.btnCreateRDS_Click);
             // 
             // FormHmsSystem
             // 
@@ -232,6 +245,7 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            this.tabPage2.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -260,5 +274,6 @@
         private System.Windows.Forms.CheckBox cboxLevel2;
         private System.Windows.Forms.ComboBox ddlWebServerAMI;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button btnCreateRDS;
     }
 }

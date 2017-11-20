@@ -16,9 +16,17 @@ namespace Hms.AwsConsole.AwsUtilities
 
         public RDSHelper(Model.Environment profile, string region)
         {
-            Amazon.Runtime.AWSCredentials credentials = new Amazon.Runtime.StoredProfileAWSCredentials(profile.ToString());
-            this.Environment = profile;
-            client = new AmazonRDSClient(credentials, AwsCommon.GetRetionEndpoint(region));
+            try
+            {
+                Amazon.Runtime.AWSCredentials credentials = new Amazon.Runtime.StoredProfileAWSCredentials("safemail");
+                client = new AmazonRDSClient(credentials, Amazon.RegionEndpoint.USEast2);
+                this.Environment = profile;
+                //monitorForm = frm;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         public AwsRdsInstance GetRDSInstance()
@@ -68,8 +76,8 @@ namespace Hms.AwsConsole.AwsUtilities
                     ;
                 }
             }
-            
-            
+
+
             var stopRequest = new StopDBInstanceRequest()
             {
                 DBInstanceIdentifier = instanceIdentifier
@@ -91,28 +99,35 @@ namespace Hms.AwsConsole.AwsUtilities
             var response = await client.ModifyDBInstanceAsync(request);
         }
 
-        public async Task CreatInstance()
+        public async Task<DBInstance> CreatInstance(DBSubnetGroup dbSubnetGroup)
         {
             var request = new CreateDBInstanceRequest()
             {
+                
                 DBInstanceIdentifier = FormatresourceName("DBInstance"),
-                 Domain= "safemail.local",
-                  Engine="sqlserver-ee",
-                   
+                DBInstanceClass = "db.t2.micro",
+                Domain = "safemail.local",
+                Engine = "sqlserver-ee",
+                MasterUsername = "sa",
+                MasterUserPassword = "P@ssw0rd",
+                DBSubnetGroupName = dbSubnetGroup.DBSubnetGroupName,
+                MultiAZ = false 
             };
-
-
+            var response = await client.CreateDBInstanceAsync(request);
+            return response.DBInstance;
         }
 
-        public async Task CreateDBSubnetGroup()
+        public async Task<DBSubnetGroup> CreateDBSubnetGroup(List<string> subnetIds)
         {
             var request = new CreateDBSubnetGroupRequest()
             {
-                DBSubnetGroupName = "",
-                SubnetIds = null
+                DBSubnetGroupName = FormatresourceName("DBSubnetGroup"),
+                SubnetIds = subnetIds
             };
-             
+            var response = await client.CreateDBSubnetGroupAsync(request);
+            return response.DBSubnetGroup;
         }
+
         private string FormatresourceName(string name)
         {
             return $"HMS_RDS_{Environment}_{name}";

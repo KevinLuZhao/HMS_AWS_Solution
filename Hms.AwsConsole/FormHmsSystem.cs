@@ -66,6 +66,10 @@ namespace Hms.AwsConsole
             }
         }
 
-        
+        private void btnCreateRDS_Click(object sender, EventArgs e)
+        {
+            DBInfraBuilder builder = new DBInfraBuilder();
+            builder.CreateNewInfrastructure(tsComboEnv.SelectedItem.ToString(), this);
+        }
     }
 }
