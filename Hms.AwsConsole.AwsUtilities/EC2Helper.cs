@@ -33,9 +33,12 @@ namespace Hms.AwsConsole.AwsUtilities
             return responseVPC;
         }
 
-        internal async Task<CreateSubnetResponse> CreateSubnet(string vpcId, string resourceTypeName, string cidr)
+        internal async Task<CreateSubnetResponse> CreateSubnet(
+            string vpcId, string resourceTypeName, string cidr, string az = null)
         {
             CreateSubnetRequest request = new CreateSubnetRequest(vpcId, cidr);
+            if (az != null)
+                request.AvailabilityZone = az;
             var response = await client.CreateSubnetAsync(request);
             string publicSubnetId = response.Subnet.SubnetId;
             AssignNameToResource(publicSubnetId, resourceTypeName);

@@ -13,14 +13,16 @@ namespace Hms.AwsConsole.AwsUtilities
     {
         public Model.Environment Environment { get; }
         private AmazonRDSClient client;
+        string region;
 
         public RDSHelper(Model.Environment profile, string region)
         {
             try
             {
                 Amazon.Runtime.AWSCredentials credentials = new Amazon.Runtime.StoredProfileAWSCredentials("safemail");
-                client = new AmazonRDSClient(credentials, Amazon.RegionEndpoint.USEast2);
+                client = new AmazonRDSClient(credentials,  AwsCommon.GetRetionEndpoint(region));
                 this.Environment = profile;
+                this.region = region;
                 //monitorForm = frm;
             }
             catch (Exception ex)
@@ -103,18 +105,41 @@ namespace Hms.AwsConsole.AwsUtilities
         {
             var request = new CreateDBInstanceRequest()
             {
-                
-                DBInstanceIdentifier = FormatresourceName("DBInstance"),
+
+                DBInstanceIdentifier = $"HMS-RDS-{Environment}-DBInstance",
                 DBInstanceClass = "db.t2.micro",
                 Domain = "safemail.local",
-                Engine = "sqlserver-ee",
+                Engine = "sqlserver-ex",
                 MasterUsername = "sa",
-                MasterUserPassword = "P@ssw0rd",
+                MasterUserPassword = "Password123",
                 DBSubnetGroupName = dbSubnetGroup.DBSubnetGroupName,
-                MultiAZ = false 
+                MultiAZ = false,
+                LicenseModel = "license-included"
             };
-            var response = await client.CreateDBInstanceAsync(request);
-            return response.DBInstance;
+            //var response = await client.CreateDBInstanceAsync(request);
+            //return response.DBInstance;
+            try
+            {
+                var response = client.CreateDBInstance(request);
+                return response.DBInstance;
+            }
+            catch (Exception ex)
+            {
+                /*
+AWS encrypts the data on the servers that host EC2 instances and provide encryption of data-in-transit from EC2 instances and on to EBS storage
+
+The LicenseModel parameter is required for configurations with multiple options.
+
+RDS does not support creating a DB instance with the following combination: 
+DBInstanceClass=db.t2.micro, Engine=sqlserver-ee, EngineVersion=13.00.4451.0.v1, LicenseModel=license-included. 
+For supported combinations of instance class and database engine version, see the documentation.
+
+"The parameter MasterUserPassword is not a valid password. Only printable ASCII characters besides '/', '@', '\"', ' ' may be used."
+
+                The parameter AllocatedStorage must be provided and must not be null.
+                 */
+                throw ex;
+            }
         }
 
         public async Task<DBSubnetGroup> CreateDBSubnetGroup(List<string> subnetIds)
@@ -122,10 +147,20 @@ namespace Hms.AwsConsole.AwsUtilities
             var request = new CreateDBSubnetGroupRequest()
             {
                 DBSubnetGroupName = FormatresourceName("DBSubnetGroup"),
-                SubnetIds = subnetIds
+                DBSubnetGroupDescription ="For safemail database",      //Not allow to be null!
+                SubnetIds = subnetIds,
+                Tags = new List<Tag> { new Tag() { Key = "Name", Value = FormatresourceName("DBSubnetGroup") } }
             };
-            var response = await client.CreateDBSubnetGroupAsync(request);
-            return response.DBSubnetGroup;
+            //var response = await client.CreateDBSubnetGroupAsync(request);
+            try
+            {
+                var response = client.CreateDBSubnetGroup(request);
+                return response.DBSubnetGroup;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         private string FormatresourceName(string name)

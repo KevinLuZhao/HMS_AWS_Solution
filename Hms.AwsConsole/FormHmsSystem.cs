@@ -24,7 +24,9 @@ namespace Hms.AwsConsole
 
         private void tsComboEnv_SelectedIndexChanged(object sender, EventArgs e)
         {
-            GlobalVariables.Enviroment = (Model.Environment)Enum.Parse(typeof(Model.Environment), tsComboEnv.SelectedItem.ToString(), true);
+            GlobalVariables.Enviroment = 
+                (Model.Environment)Enum.Parse(typeof(Model.Environment), 
+                tsComboEnv.SelectedItem.ToString(), true);
             //GlobalVariables.Region = GlobalVariables.EnvironmentAccounts[GlobalVariables.Enviroment.ToString()].Region;
             tsComboRegion.SelectedItem = Regions.GetRegionList().Find(o => o.Key == GlobalVariables.Region);
         }
@@ -40,7 +42,8 @@ namespace Hms.AwsConsole
             {
                 ApplicationsInfraBuilder builder = new ApplicationsInfraBuilder();
                 btnCreate.Click += new EventHandler(
-                    async (s, arg) => await builder.CreateNewInfrastructure(GlobalVariables.Enviroment.ToString(), this));
+                    async (s, arg) => await builder.CreateNewInfrastructure
+                    (GlobalVariables.Enviroment.ToString(), this));
 
                 tsComboEnv.ComboBox.DataSource = Enum.GetValues(typeof(Model.Environment));
                 tsComboEnv.SelectedIndex = 1;
@@ -62,7 +65,8 @@ namespace Hms.AwsConsole
             }
             catch (Exception ex)
             {
-                LogServices.WriteLog(ex.Message + " Stack trace: " + ex.StackTrace, LogType.Error, tsComboEnv.SelectedItem.ToString());
+                LogServices.WriteLog(ex.Message + " Stack trace: " + ex.StackTrace, 
+                    LogType.Error, tsComboEnv.SelectedItem.ToString());
             }
         }
 
