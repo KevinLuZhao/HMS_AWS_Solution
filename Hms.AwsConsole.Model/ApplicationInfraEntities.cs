@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Hms.AwsConsole.Model
 {
-    public class InfraEntities
+    public class ApplicationInfraEntities
     {
         public string Environment { get; set; }
         public string VpcId { get; set; }
@@ -16,5 +16,8 @@ namespace Hms.AwsConsole.Model
         public string NatGatewayId { get; set; }
         public string PublicRouteTableId { get; set; }
         public string PrivateRouteTableId { get; set; }
+        public string PublicSecurityGroupId { get; set; }
+        public string PrivateSecurityGroupId { get; set; }
+        public string JumpBoxSecurityGroupId { get; set; }
     }
 }

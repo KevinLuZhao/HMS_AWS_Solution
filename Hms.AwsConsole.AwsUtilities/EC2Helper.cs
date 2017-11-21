@@ -128,7 +128,7 @@ namespace Hms.AwsConsole.AwsUtilities
             return response.Reservation.Instances[0];
         }
 
-        public void CreateSecurityGroup(string groupName, string vpcId)
+        public string CreateSecurityGroup(string groupName, string vpcId)
         {
             CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
             {
@@ -136,6 +136,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 VpcId = vpcId
             };
             var response = client.CreateSecurityGroup(request);
+            return response.GroupId;
         }
         /*************************************************Find************************************************/
         internal Vpc FindVpc(string resourceTypeName)
@@ -309,11 +310,11 @@ namespace Hms.AwsConsole.AwsUtilities
                     break;
                 }
             }
-            if (associationId !=null)
+            if (associationId != null)
             {
                 var request2 = new DisassociateAddressRequest() { AssociationId = associationId };
                 client.DisassociateAddress(request2);
-            }        
+            }
         }
 
         //internal List<Hms.AwsConsole.Model.Image> GetAMIs()
@@ -344,6 +345,47 @@ namespace Hms.AwsConsole.AwsUtilities
 
             client.CreateTags(reqCreateTag);
             monitorForm.ShowCallbackMessage($"Resource {resource} is created, name: {resourceName}");
+        }
+
+        public void AssignRulesToSecurityGroup(string securityGroupId, List<SecurityRule> rules)
+        {
+            IpRange ips = new IpRange()
+            {
+
+            };
+            var lstIPPermission = new List<IpPermission>();
+            foreach (var rule in rules)
+            {
+                var ipPermission = new IpPermission()
+                {
+                    FromPort = rule.FromPort,
+                    ToPort = rule.ToPort,
+                    IpProtocol = rule.Protocol,
+                    Ipv4Ranges = new List<IpRange>() { new IpRange() { CidrIp = rule.Source, Description = rule.Description } }
+                };
+                lstIPPermission.Add(ipPermission);
+            }
+            var ingressRequest = new AuthorizeSecurityGroupIngressRequest();
+            ingressRequest.GroupId = securityGroupId;
+            ingressRequest.IpPermissions.AddRange(lstIPPermission);
+
+            try
+            {
+                var ingressResponse = client.AuthorizeSecurityGroupIngress(ingressRequest);
+            }
+            catch (AmazonEC2Exception ex)
+            {
+                // Check the ErrorCode to see if the rule already exists
+                if ("InvalidPermission.Duplicate" == ex.ErrorCode)
+                {
+                    //Console.WriteLine("An RDP rule for: {0} already exists.", ipRange);
+                }
+                else
+                {
+                    // The exception was thrown for another reason, so re-throw the exception
+                    throw;
+                }
+            }
         }
 
         private string FormatresourceName(string name)

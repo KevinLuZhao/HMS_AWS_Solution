@@ -12,6 +12,7 @@ namespace Hms.AwsConsole.AwsUtilities
         IWindowForm monitorForm;
         string environment;
         EC2Helper ec2Helper;
+        ApplicationInfraEntities entities = new ApplicationInfraEntities();
 
         const string STR_VPC = "VPC";
         const string STR_PUBLIC_SUBNET = "Public_Subnet";
@@ -20,6 +21,9 @@ namespace Hms.AwsConsole.AwsUtilities
         const string STR_NAT_GATEWAY = "NAT_Gateway";
         const string STR_PUBLIC_ROUTETABLE = "Public_RouteTable";
         const string STR_PRIVATE_ROUTETABLE = "Private_Routetable";
+        const string STR_PUBLIC_SECURITYGROUP = "Public_SecurityGroup";
+        const string STR_PRIVATE_SECURITYGROUP = "Private_SecurityGroup";
+        const string STR_JUMPBOX_SECURITYGROUP = "Jumpbox_SecurityGroup";
         const string CIDR_VPC = "10.82.128.0/26";
         const string CIDR_PUBLIC_SUBNET = "10.82.128.0/27";
         const string CIDR_PRIVATE_SUBNET = "10.82.128.32/27";
@@ -31,9 +35,8 @@ namespace Hms.AwsConsole.AwsUtilities
             environment = env;
             ec2Helper = new EC2Helper(env, frm);
         }
-        public async Task<InfraEntities> Creat()
+        public async Task<ApplicationInfraEntities> Creat()
         {
-            InfraEntities entities = new InfraEntities();
             entities.Environment = environment;
             /*//A good way to gernerate the VPC, but the problem is no way to know when it finish.
             LaunchVPCWithPublicSubnetRequest request = new LaunchVPCWithPublicSubnetRequest()
@@ -77,6 +80,8 @@ namespace Hms.AwsConsole.AwsUtilities
                 /******************************************** Private Route Table ********************************************/
                 var privateRouteTable = CreatePrivateRouteTable(vpc.VpcId, privateSubnet.SubnetId, ngw.NatGatewayId);
                 entities.PrivateRouteTableId = privateRouteTable.RouteTableId;
+
+
 
                 return entities;
             }
@@ -160,6 +165,62 @@ namespace Hms.AwsConsole.AwsUtilities
             ec2Helper.AssociateRouteTableToSubnet(subnetId, response.RouteTableId);
             monitorForm.ShowCallbackMessage($"Private route table is created.");
             return response;
+        }
+
+        private string CreateJumpboxSecurityGroup()
+        {
+            var sgId = ec2Helper.CreateSecurityGroup(STR_JUMPBOX_SECURITYGROUP, entities.VpcId);
+            var lstRules = new List<SecurityRule>();
+            SecurityRule rule = new SecurityRule()
+            {
+                Type = SecurityRuleType.RDP.Key,
+                FromPort = 3389,
+                ToPort = 3389,
+                Protocol = "TCP",
+                Source = CIDR_ALL,
+                Description = "All internal instances for DB connection"
+            };
+            lstRules.Add(rule);
+            ec2Helper.AssignRulesToSecurityGroup(sgId, lstRules);
+            return sgId;
+        }
+
+        private string CreatePublicSecurityGroup()
+        {
+            var sgId = ec2Helper.CreateSecurityGroup(STR_PUBLIC_SECURITYGROUP, entities.VpcId);
+            var lstRules = new List<SecurityRule>();
+            SecurityRule rule = new SecurityRule()
+            {
+                Type = SecurityRuleType.RDP.Key,
+                FromPort = 3389,
+                ToPort = 3389,
+                Protocol = "TCP",
+                Source = CIDR_VPC,
+                Description = "Local RDP Connection"
+            };
+            lstRules.Add(rule);
+            rule = new SecurityRule()
+            {
+                Type = SecurityRuleType.HTTP.Key,
+                FromPort = 80,
+                ToPort = 80,
+                Protocol = "TCP",
+                Source = CIDR_ALL,
+                Description = ""
+            };
+            lstRules.Add(rule);
+            rule = new SecurityRule()
+            {
+                Type = SecurityRuleType.HTTPS.Key,
+                FromPort = 443,
+                ToPort = 443,
+                Protocol = "TCP",
+                Source = CIDR_ALL,
+                Description = ""
+            };
+            lstRules.Add(rule);
+            ec2Helper.AssignRulesToSecurityGroup(sgId, lstRules);
+            return sgId;
         }
     }
 }

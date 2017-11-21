@@ -6,18 +6,18 @@ namespace Hms.AwsConsole.DAL
 {
     public class InfraEntitiesDb
     {
-        private DynamoDBHelper<InfraEntities> helper;
+        private DynamoDBHelper<ApplicationInfraEntities> helper;
         private string tableName = "infra_entities";
         public InfraEntitiesDb()
         {
-            helper = new DynamoDBHelper<InfraEntities>();
+            helper = new DynamoDBHelper<ApplicationInfraEntities>();
         }
-        public void Save(InfraEntities obj)
+        public void Save(ApplicationInfraEntities obj)
         {
             helper.CreateItem(tableName, obj);
         }
 
-        public List<InfraEntities> GetList()
+        public List<ApplicationInfraEntities> GetList()
         {
             return helper.ScanTable(tableName);
         }

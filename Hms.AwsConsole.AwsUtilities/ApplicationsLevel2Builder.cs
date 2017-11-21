@@ -15,9 +15,9 @@ namespace Hms.AwsConsole.AwsUtilities
         IWindowForm monitorForm;
         string environment;
         EC2Helper ec2Helper;
-        InfraEntities entities;
+        ApplicationInfraEntities entities;
 
-        public ApplicationsLevel2Builder(InfraEntities entities, string env, IWindowForm frm)
+        public ApplicationsLevel2Builder(ApplicationInfraEntities entities, string env, IWindowForm frm)
         {
             monitorForm = frm;
             environment = env;
@@ -41,7 +41,7 @@ namespace Hms.AwsConsole.AwsUtilities
         private async Task<Instance> LaunchServicesServer()
         {
             var response = await ec2Helper.LaunchInstances(
-                entities.PublicSubnetId, "ami-3f4a645a", "hms_qa_keypair",
+                entities.PrivateSubnetId, "ami-3f4a645a", "hms_qa_keypair",
                 null, InstanceType.T2Micro, 1, 1);
             return response;
         }

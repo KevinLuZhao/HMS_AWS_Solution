@@ -101,20 +101,22 @@ namespace Hms.AwsConsole.AwsUtilities
             var response = await client.ModifyDBInstanceAsync(request);
         }
 
-        public async Task<DBInstance> CreatInstance(DBSubnetGroup dbSubnetGroup)
+        public async Task<DBInstance> CreatInstance(DBSubnetGroup dbSubnetGroup, List<string> securityGroups)
         {
             var request = new CreateDBInstanceRequest()
             {
 
                 DBInstanceIdentifier = $"HMS-RDS-{Environment}-DBInstance",
                 DBInstanceClass = "db.t2.micro",
-                Domain = "safemail.local",
+                //Domain = "safemail.local",
                 Engine = "sqlserver-ex",
                 MasterUsername = "sa",
                 MasterUserPassword = "Password123",
                 DBSubnetGroupName = dbSubnetGroup.DBSubnetGroupName,
                 MultiAZ = false,
-                LicenseModel = "license-included"
+                LicenseModel = "license-included",
+                AllocatedStorage = 200,
+                DBSecurityGroups = securityGroups
             };
             //var response = await client.CreateDBInstanceAsync(request);
             //return response.DBInstance;
@@ -137,6 +139,8 @@ For supported combinations of instance class and database engine version, see th
 "The parameter MasterUserPassword is not a valid password. Only printable ASCII characters besides '/', '@', '\"', ' ' may be used."
 
                 The parameter AllocatedStorage must be provided and must not be null.
+
+                Requested domain safemail.local does not exist
                  */
                 throw ex;
             }

@@ -46,7 +46,7 @@ namespace Hms.AwsConsole
                     (GlobalVariables.Enviroment.ToString(), this));
 
                 tsComboEnv.ComboBox.DataSource = Enum.GetValues(typeof(Model.Environment));
-                tsComboEnv.SelectedIndex = 1;
+                //tsComboEnv.SelectedIndex = 1;
                 //tsComboColor.ComboBox.DataSource = Enum.GetValues(typeof(Model.Color));
                 //tsComboColor.SelectedIndex = 0;
 
