@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Hms.AwsConsole.Interfaces;
+﻿using Hms.AwsConsole.Interfaces;
 using Hms.AwsConsole.Model;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
@@ -67,6 +64,7 @@ namespace Hms.AwsConsole.AwsUtilities
             //Create RDS Instance
             var responseRdsInstance = await rdsHelper.CreatInstance(dbSubnetGroupResponse, securityGroups);
             entities.DBInstanceId = responseRdsInstance.DBInstanceIdentifier;
+
             return entities;
         }
 

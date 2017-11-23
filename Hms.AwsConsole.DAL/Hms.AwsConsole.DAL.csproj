@@ -41,9 +41,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="InfraEntitiesDb.cs" />
+    <Compile Include="GeneralDb.cs" />
+    <Compile Include="DbInfraEntitiesDb.cs" />
     <Compile Include="LogDb.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TableKeyMap.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Hms.AwsConsole.AwsUtilities\Hms.AwsConsole.AwsUtilities.csproj">

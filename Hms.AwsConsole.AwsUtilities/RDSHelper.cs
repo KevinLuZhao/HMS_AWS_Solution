@@ -122,7 +122,7 @@ namespace Hms.AwsConsole.AwsUtilities
             //return response.DBInstance;
             try
             {
-                var response = client.CreateDBInstance(request);
+                var response = await client.CreateDBInstanceAsync(request);
                 return response.DBInstance;
             }
             catch (Exception ex)
@@ -158,7 +158,7 @@ For supported combinations of instance class and database engine version, see th
             //var response = await client.CreateDBSubnetGroupAsync(request);
             try
             {
-                var response = client.CreateDBSubnetGroup(request);
+                var response = await client.CreateDBSubnetGroupAsync(request);
                 return response.DBSubnetGroup;
             }
             catch (Exception ex)

@@ -388,6 +388,17 @@ namespace Hms.AwsConsole.AwsUtilities
             }
         }
 
+        public string CreatePeeringConnection(string peerVpcId, string vpcId)
+        {
+            var request = new CreateVpcPeeringConnectionRequest()
+            {
+                PeerVpcId = peerVpcId,
+                VpcId = vpcId
+            };
+            var response = client.CreateVpcPeeringConnection(request);
+            return response.VpcPeeringConnection.VpcPeeringConnectionId;
+        }
+
         private string FormatresourceName(string name)
         {
             return $"HMS_{environment}_{name}";

@@ -20,7 +20,7 @@ namespace Hms.AwsConsole.AwsUtilities
         {
             Amazon.Runtime.AWSCredentials credentials = new Amazon.Runtime.StoredProfileAWSCredentials("safemail");
             client = new AmazonDynamoDBClient(
-                credentials, 
+                credentials,
                 AwsCommon.GetRetionEndpoint("us-west-2"));
         }
 
@@ -86,6 +86,32 @@ namespace Hms.AwsConsole.AwsUtilities
                 retValue.Add(ConvertTableItemToInstance(item));
             }
             return retValue;
+        }
+
+        //Single key, key type is string
+        public T GetItemByKey(string tableName, string primaryKeyName, string primaryKeyValue)
+        {
+            var request = new GetItemRequest
+            {
+                TableName = tableName,
+                Key = new Dictionary<string, AttributeValue>() { { primaryKeyName, new AttributeValue { S = primaryKeyValue } } },
+            };
+            var response = client.GetItem(request);
+
+            if (response.Item == null)
+                return default(T);
+            var item = response.Item;
+            return ConvertTableItemToInstance(item);
+        }
+
+        public void DeleteItem(string tableName, string primaryKeyName, string primaryKeyValue)
+        {
+            var request = new DeleteItemRequest
+            {
+                TableName = tableName,
+                Key = new Dictionary<string, AttributeValue>() { { primaryKeyName, new AttributeValue { S = primaryKeyValue } } },
+            };
+            client.DeleteItem(request);
         }
 
         //private Dictionary<string, AttributeValue> CovertInstanceToTableItem(T instance)

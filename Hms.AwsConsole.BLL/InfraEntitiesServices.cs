@@ -10,11 +10,40 @@ namespace Hms.AwsConsole.BLL
 {
     public class InfraEntitiesServices
     {
-        InfraEntitiesDb db = new InfraEntitiesDb();
+        GeneralDb<ApplicationInfraEntities> applicationEntitiesDb = 
+            new GeneralDb<ApplicationInfraEntities>("hms_application_infra_entities");
 
-        public void SaveInfraEntities(ApplicationInfraEntities item)
+        GeneralDb<DBInfraEntities> DbEntitiesDb =
+            new GeneralDb<DBInfraEntities>("hms_db_infra_entities");
+
+        public ApplicationInfraEntities GetApplicationInfraEntities(string environment)
         {
-            db.Save(item);
+            return applicationEntitiesDb.GetItem(environment);
+        }
+
+        public void SaveApplicationInfraEntities(ApplicationInfraEntities item)
+        {
+            applicationEntitiesDb.Save(item);
+        }
+
+        public void DeleteApplicationInfraEntities(string environment)
+        {
+            applicationEntitiesDb.DeleteItem(environment);
+        }
+
+        public DBInfraEntities GetDbInfraEntities(string environment)
+        {
+            return DbEntitiesDb.GetItem(environment);
+        }
+
+        public void SaveDbInfraEntities(DBInfraEntities item)
+        {
+            DbEntitiesDb.Save(item);
+        }
+
+        public void DeleteDbInfraEntities(string environment)
+        {
+            DbEntitiesDb.DeleteItem(environment);
         }
     }
 }
