@@ -21,7 +21,7 @@ namespace Hms.AwsConsole.AwsUtilities
             Amazon.Runtime.AWSCredentials credentials = new Amazon.Runtime.StoredProfileAWSCredentials("safemail");
             client = new AmazonDynamoDBClient(
                 credentials,
-                AwsCommon.GetRetionEndpoint("us-west-2"));
+                AwsCommon.GetRetionEndpoint("us-east-2"));
         }
 
         //public DynamoDBHelper(Model.Environment profile, string region)

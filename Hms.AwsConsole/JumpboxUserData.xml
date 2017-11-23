@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<powershell>
+  set-ExecutionPolicy remotesigned -force
+  iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex
+  choco install -y vcredist2015
+  choco install -y dotnet4.5
+  choco install -y mysql.workbench
+  choco install -y putty.install
+  choco install -y googlechrome
+  choco install -y awscli
+</powershell>

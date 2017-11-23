@@ -116,7 +116,9 @@ namespace Hms.AwsConsole.AwsUtilities
                 MultiAZ = false,
                 LicenseModel = "license-included",
                 AllocatedStorage = 200,
-                DBSecurityGroups = securityGroups
+                //DB Security Groups can only be associated with VPC DB Instances using API versions 2012-01-15 through 2012-09-17.
+                //DBSecurityGroups = securityGroups,
+                VpcSecurityGroupIds = securityGroups
             };
             //var response = await client.CreateDBInstanceAsync(request);
             //return response.DBInstance;

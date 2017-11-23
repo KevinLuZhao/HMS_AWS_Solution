@@ -27,14 +27,25 @@ namespace Hms.AwsConsole.AwsUtilities
 
         public async Task Creat()
         {
+            await LaunchJumpbox();
             await LaunchWebServer();
+        }
+
+        private async Task<Instance> LaunchJumpbox()
+        {
+            var response = await ec2Helper.LaunchInstances(
+                entities.PublicSubnetId, "ami-5d99b938", "hms_qa_keypair",
+                new List<string> { entities.PublicSecurityGroupId}, 
+                InstanceType.T2Micro, 1, 1, "JumpboxUserData.xml");
+            return response;
         }
 
         private async Task<Instance> LaunchWebServer()
         {
             var response = await ec2Helper.LaunchInstances(
                 entities.PublicSubnetId, "ami-3f4a645a", "hms_qa_keypair",
-                null, InstanceType.T2Micro, 1, 1);
+                new List<string> { entities.PublicSecurityGroupId },
+                InstanceType.T2Micro, 1, 1);
             return response;
         }
 

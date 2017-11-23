@@ -47,6 +47,7 @@
     <Compile Include="InfraEntitiesServices.cs" />
     <Compile Include="LogServices.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VpcConnectionServices.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Hms.AwsConsole.AwsUtilities\Hms.AwsConsole.AwsUtilities.csproj">

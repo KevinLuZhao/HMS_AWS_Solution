@@ -97,8 +97,8 @@ namespace Hms.AwsConsole.AwsUtilities
         }
 
         public async Task<Instance> LaunchInstances(
-            string subnetId, string amiId, string keyPairName, SecurityGroup mySG,
-            InstanceType instanceType, int max, int min, string privateIp = null)
+            string subnetId, string amiId, string keyPairName, List<string> mySGIds,
+            InstanceType instanceType, int max, int min, string userData = "", string privateIp = null)
         {
             //List<string> groups = new List<string>() { mySG.GroupId };
             var eni = new InstanceNetworkInterfaceSpecification()
@@ -118,10 +118,12 @@ namespace Hms.AwsConsole.AwsUtilities
             {
                 ImageId = amiId,
                 InstanceType = instanceType,
+                SecurityGroupIds = mySGIds,
                 MinCount = min,
                 MaxCount = max,
                 KeyName = keyPairName,
-                NetworkInterfaces = enis
+                NetworkInterfaces = enis,
+                UserData = userData
             };
 
             var response = await client.RunInstancesAsync(launchRequest);
@@ -133,7 +135,8 @@ namespace Hms.AwsConsole.AwsUtilities
             CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
             {
                 GroupName = groupName,
-                VpcId = vpcId
+                VpcId = vpcId,
+                Description = "HMS RDS Security Group"
             };
             var response = client.CreateSecurityGroup(request);
             return response.GroupId;

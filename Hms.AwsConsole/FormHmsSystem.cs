@@ -9,6 +9,8 @@ namespace Hms.AwsConsole
 {
     public partial class FormHmsSystem : FormMdiChildBase, IWindowForm
     {
+        ApplicationInfraEntities appEntities;
+        DBInfraEntities dbEntities;
         public FormHmsSystem()
         {
             InitializeComponent();
@@ -62,6 +64,9 @@ namespace Hms.AwsConsole
                 ddlWebServerAMI.DataSource = lstAMIs;
                 ddlWebServerAMI.DisplayMember = "Name";
                 ddlWebServerAMI.ValueMember = "AmiId";
+
+                LoadApplicationStatus();
+                
             }
             catch (Exception ex)
             {
@@ -74,6 +79,40 @@ namespace Hms.AwsConsole
         {
             DBInfraBuilder builder = new DBInfraBuilder();
             builder.CreateNewInfrastructure(tsComboEnv.SelectedItem.ToString(), this);
+        }
+
+        private void LoadApplicationStatus()
+        {
+            var services = new InfraEntitiesServices();
+            appEntities = services.GetApplicationInfraEntities(tsComboEnv.SelectedItem.ToString());
+            if (appEntities != null)
+            {
+                label1.Text = $"VPC: {appEntities.VpcId}, Public Subnet: {appEntities.PublicSubnetId}, Private Subnet: {appEntities.PrivateSubnetId} were created";
+            }
+            else
+            {
+                label1.Text = "Application Infrastructure is not created";
+            }
+        }
+
+        private void LoadDbStatus()
+        {
+            var services = new InfraEntitiesServices();
+            dbEntities = services.GetDbInfraEntities(tsComboEnv.SelectedItem.ToString());
+            if (dbEntities != null)
+            {
+                label1.Text = $"VPC: {dbEntities.VpcId}, Subnet Group: {dbEntities.DBSubnetGoupId}, Instance: {dbEntities.DBInstanceId} were created";
+            }
+            else
+            {
+                label1.Text = "RDS infrastructure is not created";
+            }
+        }
+
+        private void btnCreateVpcConnection_Click(object sender, EventArgs e)
+        {
+            var service = new VpcConnectionServices();
+            service.CreateVpcPeeringConnection(dbEntities.VpcId, appEntities.VpcId, tsComboEnv.SelectedItem.ToString(), this);
         }
     }
 }
