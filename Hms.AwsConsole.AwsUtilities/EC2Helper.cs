@@ -137,14 +137,25 @@ namespace Hms.AwsConsole.AwsUtilities
                 foreach (var instance in response.Reservation.Instances)
                 {
                     AssignNameToResource(instance.InstanceId, resourceTypeName + counter.ToString());
+
+                    DynamoDBHelper<AwsAppInstance> dynamoDbHelper = new DynamoDBHelper<AwsAppInstance>();
+                    var awsInstance = new AwsAppInstance()
+                    {
+                        Environment = environment,
+                        InstanceId = instance.InstanceId,
+                        Name = resourceTypeName + counter.ToString(),
+                        PublicIP = instance.PublicIpAddress,
+                        PrivateIP = instance.PrivateIpAddress
+                    };
+                    dynamoDbHelper.CreateItem("hms_instances", awsInstance);
                     counter++;
                 }
             }
-            
+
             return response.Reservation.Instances;
         }
 
-        public string CreateSecurityGroup(string groupName, string vpcId, string resourceTypeName)
+        public async Task<string> CreateSecurityGroup(string groupName, string vpcId, string resourceTypeName)
         {
             CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
             {
@@ -152,7 +163,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 VpcId = vpcId,
                 Description = "HMS RDS Security Group"
             };
-            var response = client.CreateSecurityGroup(request);
+            var response = await client.CreateSecurityGroupAsync(request);
             AssignNameToResource(response.GroupId, resourceTypeName);
             return response.GroupId;
         }
@@ -263,6 +274,14 @@ namespace Hms.AwsConsole.AwsUtilities
                 $"Subnet {subnet.SubnetId}|{(subnet.Tags.Find(o => o.Key == "Name")).Value} is deleted");
         }
 
+        internal async Task DeleteSecurityGoup(string sgId, string resourceTypename)
+        {
+            var request = new DeleteSecurityGroupRequest(sgId);
+            await client.DeleteSecurityGroupAsync(request);
+            monitorForm.ShowCallbackMessage(
+                $"Scurity Group {sgId}|{resourceTypename} is deleted");
+        }
+
         internal async Task DeleteInternetGateway(InternetGateway igw, string vpcId)
         {
             var requestDetach = new DetachInternetGatewayRequest()
@@ -365,7 +384,7 @@ namespace Hms.AwsConsole.AwsUtilities
             monitorForm.ShowCallbackMessage($"Resource {resourceId} is created, name: {resourceName}");
         }
 
-        public void AssignRulesToSecurityGroup(string securityGroupId, List<SecurityRule> rules)
+        public async Task AssignRulesToSecurityGroup(string securityGroupId, List<SecurityRule> rules)
         {
             IpRange ips = new IpRange()
             {
@@ -389,7 +408,7 @@ namespace Hms.AwsConsole.AwsUtilities
 
             try
             {
-                var ingressResponse = client.AuthorizeSecurityGroupIngress(ingressRequest);
+                var ingressResponse = await client.AuthorizeSecurityGroupIngressAsync(ingressRequest);
             }
             catch (AmazonEC2Exception ex)
             {

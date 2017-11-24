@@ -21,10 +21,9 @@ namespace Hms.AwsConsole.BLL
                 //service.SaveInfraEntities(response);
                 //Level2Builder level2 = new Level2Builder(response, env, form);
                 //await level2.Creat();
-                DBLevel1InfraBuilder level1 = 
-                    new DBLevel1InfraBuilder((Model.Environment)Enum.Parse(typeof(Model.Environment), env), form);
+                var level1 = new DBLevel1InfraBuilder((Model.Environment)Enum.Parse(typeof(Model.Environment), env), form);
                 var response = await level1.Creat();
-                InfraEntitiesServices service = new InfraEntitiesServices();
+                var service = new InfraEntitiesServices();
                 service.SaveDbInfraEntities(response);
             }
             catch (Exception ex)

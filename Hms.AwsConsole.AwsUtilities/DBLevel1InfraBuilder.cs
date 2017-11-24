@@ -31,6 +31,7 @@ namespace Hms.AwsConsole.AwsUtilities
         {
             monitorForm = frm;
             environment = env;
+            entities.Environment = env.ToString();
             ec2Helper = new EC2Helper(env.ToString(), frm);
         }
 
@@ -52,7 +53,7 @@ namespace Hms.AwsConsole.AwsUtilities
 
             //Create Security Groups
             var securityGroups = new List<string>();
-            entities.DBSecurityGroupId = CreatRdsSeurityGroup();
+            entities.DBSecurityGroupId = await CreatRdsSeurityGroup();
             securityGroups.Add(entities.DBSecurityGroupId);
 
             RDSHelper rdsHelper = new RDSHelper(environment, "us-east-2");
@@ -68,9 +69,9 @@ namespace Hms.AwsConsole.AwsUtilities
             return entities;
         }
 
-        private string CreatRdsSeurityGroup()
+        private async Task<string> CreatRdsSeurityGroup()
         {
-            var sgId = ec2Helper.CreateSecurityGroup(STR_RDS_SECURITY_GROUP, entities.VpcId, STR_RDS_SECURITY_GROUP);
+            var sgId = await ec2Helper.CreateSecurityGroup(STR_RDS_SECURITY_GROUP, entities.VpcId, STR_RDS_SECURITY_GROUP);
             var lstRules = new List<SecurityRule>();
             SecurityRule rule = new SecurityRule()
             {
@@ -82,7 +83,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 Description = "All internal instances for DB connection"
             };
             lstRules.Add(rule);
-            ec2Helper.AssignRulesToSecurityGroup(sgId, lstRules);
+            await ec2Helper.AssignRulesToSecurityGroup(sgId, lstRules);
             return sgId;
         }
     }

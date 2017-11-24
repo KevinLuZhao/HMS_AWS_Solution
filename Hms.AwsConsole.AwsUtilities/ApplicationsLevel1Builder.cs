@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Hms.AwsConsole.Interfaces;
 using Amazon.EC2.Model;
 using Hms.AwsConsole.Model;
+using System.Threading;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
@@ -56,7 +57,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 entities.VpcId = vpc.VpcId;
 
                 /******************************************** Security Group ********************************************/
-                var responsePublicSG = CreatePublicSecurityGroup();
+                var responsePublicSG = await CreatePublicSecurityGroup();
                 entities.PublicSecurityGroupId = responsePublicSG;
 
                 //Later
@@ -101,7 +102,7 @@ namespace Hms.AwsConsole.AwsUtilities
         public async Task Teardown()
         {
             Vpc existingVpc = ec2Helper.FindVpc(STR_VPC);
-
+            
             if (existingVpc != null)
             {
                 var publicSubnet = ec2Helper.FindSubnet(STR_PUBLIC_SUBNET);
@@ -133,6 +134,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 if (natGateway != null)
                 {
                     await ec2Helper.DeleteNatGateway(natGateway, existingVpc.VpcId);
+                    Thread.Sleep(30000);
                 }
 
                 ec2Helper.DisassociateAddress("18.220.208.101");
@@ -151,6 +153,8 @@ namespace Hms.AwsConsole.AwsUtilities
                 {
                     await ec2Helper.DeleteSubnet(privateSubnet);
                 }
+
+                //await ec2Helper.DeleteSecurityGoup()
 
                 await ec2Helper.DeleteVpc(existingVpc);
             }
@@ -174,9 +178,9 @@ namespace Hms.AwsConsole.AwsUtilities
             return response;
         }
 
-        private string CreateJumpboxSecurityGroup()
+        private async Task<string> CreateJumpboxSecurityGroup()
         {
-            var sgId = ec2Helper.CreateSecurityGroup(STR_JUMPBOX_SECURITYGROUP, entities.VpcId, STR_JUMPBOX_SECURITYGROUP);
+            var sgId = await ec2Helper.CreateSecurityGroup(STR_JUMPBOX_SECURITYGROUP, entities.VpcId, STR_JUMPBOX_SECURITYGROUP);
             var lstRules = new List<SecurityRule>();
             SecurityRule rule = new SecurityRule()
             {
@@ -188,13 +192,13 @@ namespace Hms.AwsConsole.AwsUtilities
                 Description = "All internal instances for DB connection"
             };
             lstRules.Add(rule);
-            ec2Helper.AssignRulesToSecurityGroup(sgId, lstRules);
+            await ec2Helper.AssignRulesToSecurityGroup(sgId, lstRules);
             return sgId;
         }
 
-        private string CreatePublicSecurityGroup()
+        private async Task<string> CreatePublicSecurityGroup()
         {
-            var sgId = ec2Helper.CreateSecurityGroup(STR_PUBLIC_SECURITYGROUP, entities.VpcId, STR_PUBLIC_SECURITYGROUP);
+            var sgId = await ec2Helper.CreateSecurityGroup(STR_PUBLIC_SECURITYGROUP, entities.VpcId, STR_PUBLIC_SECURITYGROUP);
             var lstRules = new List<SecurityRule>();
             SecurityRule rule = new SecurityRule()
             {
@@ -226,7 +230,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 Description = ""
             };
             lstRules.Add(rule);
-            ec2Helper.AssignRulesToSecurityGroup(sgId, lstRules);
+            await ec2Helper.AssignRulesToSecurityGroup(sgId, lstRules);
             return sgId;
         }
     }

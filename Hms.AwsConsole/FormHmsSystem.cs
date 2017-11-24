@@ -42,9 +42,14 @@ namespace Hms.AwsConsole
         {
             try
             {
-                ApplicationsInfraBuilder builder = new ApplicationsInfraBuilder();
+                ApplicationsInfraBuilder applicationBuilder = new ApplicationsInfraBuilder();
                 btnCreate.Click += new EventHandler(
-                    async (s, arg) => await builder.CreateNewInfrastructure
+                    async (s, arg) => await applicationBuilder.CreateNewInfrastructure
+                    (GlobalVariables.Enviroment.ToString(), this));
+
+                DBInfraBuilder dbBuilder = new DBInfraBuilder();
+                btnCreateRDS.Click += new EventHandler(
+                    async (s, arg) => await dbBuilder.CreateNewInfrastructure
                     (GlobalVariables.Enviroment.ToString(), this));
 
                 tsComboEnv.ComboBox.DataSource = Enum.GetValues(typeof(Model.Environment));
@@ -73,12 +78,6 @@ namespace Hms.AwsConsole
                 LogServices.WriteLog(ex.Message + " Stack trace: " + ex.StackTrace, 
                     LogType.Error, tsComboEnv.SelectedItem.ToString());
             }
-        }
-
-        private void btnCreateRDS_Click(object sender, EventArgs e)
-        {
-            DBInfraBuilder builder = new DBInfraBuilder();
-            builder.CreateNewInfrastructure(tsComboEnv.SelectedItem.ToString(), this);
         }
 
         private void LoadApplicationStatus()

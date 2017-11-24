@@ -170,7 +170,6 @@
             this.btnCreateRDS.TabIndex = 0;
             this.btnCreateRDS.Text = "Create Database Infra";
             this.btnCreateRDS.UseVisualStyleBackColor = true;
-            this.btnCreateRDS.Click += new System.EventHandler(this.btnCreateRDS_Click);
             // 
             // txtMonitor
             // 
