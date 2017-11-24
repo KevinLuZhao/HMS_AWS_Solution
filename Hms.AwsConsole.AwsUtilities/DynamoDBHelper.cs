@@ -98,7 +98,7 @@ namespace Hms.AwsConsole.AwsUtilities
             };
             var response = client.GetItem(request);
 
-            if (response.Item == null)
+            if (response.Item.Count == 0)
                 return default(T);
             var item = response.Item;
             return ConvertTableItemToInstance(item);
@@ -145,33 +145,39 @@ namespace Hms.AwsConsole.AwsUtilities
             T obj = (T)Activator.CreateInstance(typeof(T));
             foreach (var prop in typeof(T).GetProperties())
             {
-                //foreach
-                string propertyType;
-                if (prop.PropertyType.BaseType.FullName == "System.Enum")
+                try
                 {
-                    propertyType = "System.Enum";
+                    string propertyType;
+                    if (prop.PropertyType.BaseType.FullName == "System.Enum")
+                    {
+                        propertyType = "System.Enum";
+                    }
+                    else
+                    {
+                        propertyType = prop.PropertyType.FullName;
+                    }
+                    switch (propertyType)
+                    {
+                        case "System.String":
+                            prop.SetValue(obj, tableItem[prop.Name].S);
+                            break;
+                        case "System.Int32":
+                            prop.SetValue(obj, int.Parse(tableItem[prop.Name].S));
+                            break;
+                        case "System.Enum":
+                            prop.SetValue(obj, Enum.Parse(prop.PropertyType, tableItem[prop.Name].S));
+                            break;
+                        case "System.DateTime":
+                            prop.SetValue(obj, DateTime.Parse(tableItem[prop.Name].S));
+                            break;
+                        default:
+                            prop.SetValue(obj, tableItem[prop.Name].S);
+                            break;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    propertyType = prop.PropertyType.FullName;
-                }
-                switch (propertyType)
-                {
-                    case "System.String":
-                        prop.SetValue(obj, tableItem[prop.Name].S);
-                        break;
-                    case "System.Int32":
-                        prop.SetValue(obj, int.Parse(tableItem[prop.Name].S));
-                        break;
-                    case "System.Enum":
-                        prop.SetValue(obj, Enum.Parse(prop.PropertyType, tableItem[prop.Name].S));
-                        break;
-                    case "System.DateTime":
-                        prop.SetValue(obj, DateTime.Parse(tableItem[prop.Name].S));
-                        break;
-                    default:
-                        prop.SetValue(obj, tableItem[prop.Name].S);
-                        break;
+                    throw new Exception($"Found error while tranfer key {prop.Name} of TableItem. Error message:{ex.Message}");
                 }
             }
             return obj;

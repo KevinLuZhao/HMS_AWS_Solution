@@ -18,6 +18,6 @@ namespace Hms.AwsConsole.Model
         public string PrivateRouteTableId { get; set; }
         public string PublicSecurityGroupId { get; set; }
         public string PrivateSecurityGroupId { get; set; }
-        public string JumpBoxSecurityGroupId { get; set; }
+        //public string JumpBoxSecurityGroupId { get; set; }
     }
 }

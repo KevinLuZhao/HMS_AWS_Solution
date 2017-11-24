@@ -96,8 +96,8 @@ namespace Hms.AwsConsole.AwsUtilities
             var response = client.CreateRoute(request);
         }
 
-        public async Task<Instance> LaunchInstances(
-            string subnetId, string amiId, string keyPairName, List<string> mySGIds,
+        public async Task<List<Instance>> LaunchInstances(
+            string resourceTypeName, string subnetId, string amiId, string keyPairName, List<string> mySGIds,
             InstanceType instanceType, int max, int min, string userData = "", string privateIp = null)
         {
             //List<string> groups = new List<string>() { mySG.GroupId };
@@ -127,10 +127,24 @@ namespace Hms.AwsConsole.AwsUtilities
             };
 
             var response = await client.RunInstancesAsync(launchRequest);
-            return response.Reservation.Instances[0];
+            if (response.Reservation.Instances.Count == 1)
+            {
+                AssignNameToResource(response.Reservation.Instances[0].InstanceId, resourceTypeName);
+            }
+            else
+            {
+                int counter = 0;
+                foreach (var instance in response.Reservation.Instances)
+                {
+                    AssignNameToResource(instance.InstanceId, resourceTypeName + counter.ToString());
+                    counter++;
+                }
+            }
+            
+            return response.Reservation.Instances;
         }
 
-        public string CreateSecurityGroup(string groupName, string vpcId)
+        public string CreateSecurityGroup(string groupName, string vpcId, string resourceTypeName)
         {
             CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
             {
@@ -139,6 +153,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 Description = "HMS RDS Security Group"
             };
             var response = client.CreateSecurityGroup(request);
+            AssignNameToResource(response.GroupId, resourceTypeName);
             return response.GroupId;
         }
         /*************************************************Find************************************************/
@@ -337,17 +352,17 @@ namespace Hms.AwsConsole.AwsUtilities
         //    return rets;
         //}
 
-        private void AssignNameToResource(string resource, string name)
+        private void AssignNameToResource(string resourceId, string resourTypeName)
         {
-            string resourceName = FormatresourceName(name);
+            string resourceName = FormatresourceName(resourTypeName);
             CreateTagsRequest reqCreateTag = new CreateTagsRequest();
             reqCreateTag.Resources = new List<string>();
-            reqCreateTag.Resources.Add(resource);
+            reqCreateTag.Resources.Add(resourceId);
             reqCreateTag.Tags = new List<Tag>();
             reqCreateTag.Tags.Add(new Tag("Name", resourceName));
 
             client.CreateTags(reqCreateTag);
-            monitorForm.ShowCallbackMessage($"Resource {resource} is created, name: {resourceName}");
+            monitorForm.ShowCallbackMessage($"Resource {resourceId} is created, name: {resourceName}");
         }
 
         public void AssignRulesToSecurityGroup(string securityGroupId, List<SecurityRule> rules)

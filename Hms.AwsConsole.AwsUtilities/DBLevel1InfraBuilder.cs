@@ -70,7 +70,7 @@ namespace Hms.AwsConsole.AwsUtilities
 
         private string CreatRdsSeurityGroup()
         {
-            var sgId = ec2Helper.CreateSecurityGroup(STR_RDS_SECURITY_GROUP, entities.VpcId);
+            var sgId = ec2Helper.CreateSecurityGroup(STR_RDS_SECURITY_GROUP, entities.VpcId, STR_RDS_SECURITY_GROUP);
             var lstRules = new List<SecurityRule>();
             SecurityRule rule = new SecurityRule()
             {

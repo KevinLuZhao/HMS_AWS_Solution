@@ -17,6 +17,9 @@ namespace Hms.AwsConsole.AwsUtilities
         EC2Helper ec2Helper;
         ApplicationInfraEntities entities;
 
+        const string STR_JUMPBOX_INSTANCE = "Jumpbox";
+        const string STR_WEBSERVER_INSTANCE = "WebServer";
+
         public ApplicationsLevel2Builder(ApplicationInfraEntities entities, string env, IWindowForm frm)
         {
             monitorForm = frm;
@@ -33,36 +36,48 @@ namespace Hms.AwsConsole.AwsUtilities
 
         private async Task<Instance> LaunchJumpbox()
         {
-            var response = await ec2Helper.LaunchInstances(
+            string str = @"<powershell>
+  set-ExecutionPolicy remotesigned -force
+  iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex
+  choco install -y vcredist2015
+  choco install -y dotnet4.5
+  choco install -y mysql.workbench
+  choco install -y putty.install
+  choco install -y googlechrome
+  choco install -y awscli
+</powershell>";
+            byte[] encbuff = System.Text.Encoding.UTF8.GetBytes(str);
+            string userData = Convert.ToBase64String(encbuff);
+            var response = await ec2Helper.LaunchInstances(STR_JUMPBOX_INSTANCE,
                 entities.PublicSubnetId, "ami-5d99b938", "hms_qa_keypair",
                 new List<string> { entities.PublicSecurityGroupId}, 
-                InstanceType.T2Micro, 1, 1, "JumpboxUserData.xml");
-            return response;
+                InstanceType.T2Micro, 1, 1, userData);
+            return response[0];
         }
 
         private async Task<Instance> LaunchWebServer()
         {
-            var response = await ec2Helper.LaunchInstances(
+            var response = await ec2Helper.LaunchInstances(STR_WEBSERVER_INSTANCE,
                 entities.PublicSubnetId, "ami-3f4a645a", "hms_qa_keypair",
                 new List<string> { entities.PublicSecurityGroupId },
                 InstanceType.T2Micro, 1, 1);
-            return response;
+            return response[0];
         }
 
-        private async Task<Instance> LaunchServicesServer()
-        {
-            var response = await ec2Helper.LaunchInstances(
-                entities.PrivateSubnetId, "ami-3f4a645a", "hms_qa_keypair",
-                null, InstanceType.T2Micro, 1, 1);
-            return response;
-        }
+        //private async Task<Instance> LaunchServicesServer()
+        //{
+        //    var response = await ec2Helper.LaunchInstances(
+        //        entities.PrivateSubnetId, "ami-3f4a645a", "hms_qa_keypair",
+        //        null, InstanceType.T2Micro, 1, 1);
+        //    return response;
+        //}
 
-        private async Task<Instance> LaunchEmailServiceServer()
-        {
-            var response = await ec2Helper.LaunchInstances(
-                entities.PublicSubnetId, "ami-3f4a645a", "hms_qa_keypair",
-                null, InstanceType.T2Micro, 1, 1);
-            return response;
-        }
+        //private async Task<Instance> LaunchEmailServiceServer()
+        //{
+        //    var response = await ec2Helper.LaunchInstances(
+        //        entities.PublicSubnetId, "ami-3f4a645a", "hms_qa_keypair",
+        //        null, InstanceType.T2Micro, 1, 1);
+        //    return response;
+        //}
     }
 }

@@ -55,6 +55,15 @@ namespace Hms.AwsConsole.AwsUtilities
                 var vpc = responseVpc.Vpc;
                 entities.VpcId = vpc.VpcId;
 
+                /******************************************** Security Group ********************************************/
+                var responsePublicSG = CreatePublicSecurityGroup();
+                entities.PublicSecurityGroupId = responsePublicSG;
+
+                //Later
+                //var responsePrivateSG = CreatePrivateSecurityGroup();
+                //entities.PrivateSecurityGroupId = responsePrivateSG;
+                entities.PrivateSecurityGroupId = "Wait";
+
                 var responsePublicSubnet = await ec2Helper.CreateSubnet(vpc.VpcId, STR_PUBLIC_SUBNET, CIDR_PUBLIC_SUBNET);
                 var publicSubnet = responsePublicSubnet.Subnet;
                 entities.PublicSubnetId = publicSubnet.SubnetId;
@@ -80,8 +89,6 @@ namespace Hms.AwsConsole.AwsUtilities
                 /******************************************** Private Route Table ********************************************/
                 var privateRouteTable = CreatePrivateRouteTable(vpc.VpcId, privateSubnet.SubnetId, ngw.NatGatewayId);
                 entities.PrivateRouteTableId = privateRouteTable.RouteTableId;
-
-
 
                 return entities;
             }
@@ -169,7 +176,7 @@ namespace Hms.AwsConsole.AwsUtilities
 
         private string CreateJumpboxSecurityGroup()
         {
-            var sgId = ec2Helper.CreateSecurityGroup(STR_JUMPBOX_SECURITYGROUP, entities.VpcId);
+            var sgId = ec2Helper.CreateSecurityGroup(STR_JUMPBOX_SECURITYGROUP, entities.VpcId, STR_JUMPBOX_SECURITYGROUP);
             var lstRules = new List<SecurityRule>();
             SecurityRule rule = new SecurityRule()
             {
@@ -187,7 +194,7 @@ namespace Hms.AwsConsole.AwsUtilities
 
         private string CreatePublicSecurityGroup()
         {
-            var sgId = ec2Helper.CreateSecurityGroup(STR_PUBLIC_SECURITYGROUP, entities.VpcId);
+            var sgId = ec2Helper.CreateSecurityGroup(STR_PUBLIC_SECURITYGROUP, entities.VpcId, STR_PUBLIC_SECURITYGROUP);
             var lstRules = new List<SecurityRule>();
             SecurityRule rule = new SecurityRule()
             {
