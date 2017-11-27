@@ -1,4 +1,5 @@
-﻿using Hms.AwsConsole.Interfaces;
+﻿using System;
+using Hms.AwsConsole.Interfaces;
 using Hms.AwsConsole.Model;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -67,6 +68,22 @@ namespace Hms.AwsConsole.AwsUtilities
             entities.DBInstanceId = responseRdsInstance.DBInstanceIdentifier;
 
             return entities;
+        }
+
+        public async Task<string> Delete(DBInfraEntities entities)
+        {
+            RDSHelper rdsHelper = new RDSHelper(environment, "us-east-2");
+            try
+            {
+                await rdsHelper.DeleteRDSInstance(entities.DBInstanceId);
+                await ec2Helper.DeleteSecurityGoup(entities.DBSecurityGroupId, STR_RDS_SECURITY_GROUP);
+                await ec2Helper.DeleteSubnet(entities.SubnetAId);
+                return "Success";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
         }
 
         private async Task<string> CreatRdsSeurityGroup()

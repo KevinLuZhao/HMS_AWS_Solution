@@ -5,6 +5,7 @@ using Hms.AwsConsole.Interfaces;
 using Amazon.EC2.Model;
 using Hms.AwsConsole.Model;
 using System.Threading;
+using Amazon.EC2;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
@@ -134,7 +135,6 @@ namespace Hms.AwsConsole.AwsUtilities
                 if (natGateway != null)
                 {
                     await ec2Helper.DeleteNatGateway(natGateway, existingVpc.VpcId);
-                    Thread.Sleep(30000);
                 }
 
                 ec2Helper.DisassociateAddress("18.220.208.101");

@@ -44,6 +44,7 @@
     <Compile Include="AMIServices.cs" />
     <Compile Include="ApplicationsInfraBuilder.cs" />
     <Compile Include="DBInfraBuilder.cs" />
+    <Compile Include="DBInstanceServices.cs" />
     <Compile Include="InfraEntitiesServices.cs" />
     <Compile Include="LogServices.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

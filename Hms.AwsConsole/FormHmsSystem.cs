@@ -71,7 +71,7 @@ namespace Hms.AwsConsole
                 ddlWebServerAMI.ValueMember = "AmiId";
 
                 LoadApplicationStatus();
-                
+                LoadDbStatus();
             }
             catch (Exception ex)
             {
@@ -100,11 +100,25 @@ namespace Hms.AwsConsole
             dbEntities = services.GetDbInfraEntities(tsComboEnv.SelectedItem.ToString());
             if (dbEntities != null)
             {
-                label1.Text = $"VPC: {dbEntities.VpcId}, Subnet Group: {dbEntities.DBSubnetGoupId}, Instance: {dbEntities.DBInstanceId} were created";
+                lblInfraInfo.Text = $"VPC: {dbEntities.VpcId}, Subnet Group: {dbEntities.DBSubnetGoupId}, Instance: {dbEntities.DBInstanceId} were created";
             }
             else
             {
-                label1.Text = "RDS infrastructure is not created";
+                lblInfraInfo.Text = "RDS infrastructure is not created";
+            }
+            var instanceServices = new DBInstanceServices(tsComboEnv.SelectedItem.ToString(), tsComboRegion.SelectedItem.ToString());
+            var instance = instanceServices.GetDBInstance();
+            if (instance != null)
+            {
+                panel1.Show();
+                lblDbInstanceId.Text = instance.DBInstanceIdentifier;
+                lblDbInstanceEndpoint.Text = instance.Endpoint;
+                //lblDbInstancePort.Text = instance.Port.ToString();
+                lblDbInstanceStatus.Text = instance.Status;
+            }
+            else
+            {
+                panel1.Hide();
             }
         }
 

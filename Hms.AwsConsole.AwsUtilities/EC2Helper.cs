@@ -1,4 +1,5 @@
-﻿using Amazon.EC2;
+﻿using System;
+using Amazon.EC2;
 using Amazon.EC2.Model;
 //using Amazon.EC2.Util;
 using Hms.AwsConsole.Interfaces;
@@ -15,7 +16,6 @@ namespace Hms.AwsConsole.AwsUtilities
         string environment;
         const string CIDR_ALL = "0.0.0.0/0";
 
-        /*************************************************Create************************************************/
         public EC2Helper(string env, IWindowForm frm)
         {
             Amazon.Runtime.AWSCredentials credentials = new Amazon.Runtime.StoredProfileAWSCredentials("safemail");
@@ -23,7 +23,7 @@ namespace Hms.AwsConsole.AwsUtilities
             this.environment = env;
             monitorForm = frm;
         }
-
+        /************************************************* VPC ************************************************/
         internal async Task<CreateVpcResponse> CreateVpc(string resourceTypeName, string cidr)
         {
             CreateVpcRequest requestVPC = new CreateVpcRequest(cidr);
@@ -33,6 +33,30 @@ namespace Hms.AwsConsole.AwsUtilities
             return responseVPC;
         }
 
+        internal Vpc FindVpc(string resourceTypeName)
+        {
+            Vpc ret = null;
+            var response = client.DescribeVpcs();
+            foreach (var item in response.Vpcs)
+            {
+                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
+                {
+                    ret = item;
+                    break;
+                }
+            }
+            return ret;
+        }
+
+        internal async Task DeleteVpc(string vpcId)
+        {
+            var request = new DeleteVpcRequest(vpcId);
+            await client.DeleteVpcAsync(request);
+            //monitorForm.ShowCallbackMessage(
+            //    $"Subnet {vpc.VpcId}|{(vpc.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+        }
+
+        /************************************************* Subnet ************************************************/
         internal async Task<CreateSubnetResponse> CreateSubnet(
             string vpcId, string resourceTypeName, string cidr, string az = null)
         {
@@ -45,7 +69,31 @@ namespace Hms.AwsConsole.AwsUtilities
             return response;
         }
 
-        internal async Task<CreateInternetGatewayResponse> CreateInternetGateway(string vpcId, string resourceTypeName)
+        internal Subnet FindSubnet(string resourceTypeName)
+        {
+            Subnet ret = null;
+            //DescribeSubnetsRequest request = new DescribeSubnetsRequest();
+            var response = client.DescribeSubnets();
+            foreach (var item in response.Subnets)
+            {
+                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
+                {
+                    ret = item;
+                    break;
+                }
+            }
+            return ret;
+        }
+
+        internal async Task DeleteSubnet(string subnetId)
+        {
+            var request = new DeleteSubnetRequest(subnetId);
+            await client.DeleteSubnetAsync(request);
+            //monitorForm.ShowCallbackMessage(
+            //    $"Subnet {subnet.SubnetId}|{(subnet.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+        }
+        /************************************************* Gateway ************************************************/
+        internal async Task<string> CreateInternetGateway(string vpcId, string resourceTypeName)
         {
             var response = await client.CreateInternetGatewayAsync();
             var igwId = response.InternetGateway.InternetGatewayId;
@@ -57,11 +105,42 @@ namespace Hms.AwsConsole.AwsUtilities
                 VpcId = vpcId
             };
             var responseAttachIgw = await client.AttachInternetGatewayAsync(requestIgw);
-            monitorForm.ShowCallbackMessage($"{igwId} is attached to {vpcId}.");
-            return response;
+            //monitorForm.ShowCallbackMessage($"{igwId} is attached to {vpcId}.");
+            return response.InternetGateway.InternetGatewayId;
         }
 
-        internal async Task<CreateNatGatewayResponse> CreateNatGateway(string subnetId, string allocationId, string resourceTypeName)
+        internal InternetGateway FindInternetGateway(string resourceTypeName)
+        {
+            InternetGateway ret = null;
+            //var request = new DescribeInternetGatewaysRequest();
+            var response = client.DescribeInternetGateways();
+            foreach (var item in response.InternetGateways)
+            {
+                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
+                {
+                    ret = item;
+                    break;
+                }
+            }
+            return ret;
+        }
+
+        internal async Task DeleteInternetGateway(string igwId, string vpcId)
+        {
+            var requestDetach = new DetachInternetGatewayRequest()
+            {
+                InternetGatewayId = igwId,
+                VpcId = vpcId
+            };
+            client.DetachInternetGateway(requestDetach);
+
+            var request = new DeleteInternetGatewayRequest() { InternetGatewayId = igwId };
+            await client.DeleteInternetGatewayAsync(request);
+            //monitorForm.ShowCallbackMessage(
+            //    $"Internet Gateway {igw.InternetGatewayId}|{(igw.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+        }
+
+        internal async Task<string> CreateNatGateway(string subnetId, string allocationId, string resourceTypeName)
         {
             var request = new CreateNatGatewayRequest()
             {
@@ -71,9 +150,62 @@ namespace Hms.AwsConsole.AwsUtilities
             var response = await client.CreateNatGatewayAsync(request);
             AssignNameToResource(response.NatGateway.NatGatewayId, resourceTypeName);
 
-            return response;
+            return response.NatGateway.NatGatewayId;
         }
 
+        internal NatGateway FindNatGateway(string resourceTypeName)
+        {
+            NatGateway ret = null;
+            var request = new DescribeNatGatewaysRequest();
+            var response = client.DescribeNatGateways(request);
+            foreach (var item in response.NatGateways)
+            {
+                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
+                {
+                    ret = item;
+                    break;
+                }
+            }
+            return ret;
+        }
+
+        internal NatGateway FindNatGatewayById(string ngwId)
+        {
+            try
+            {
+                NatGateway ret = null;
+                var request = new DescribeNatGatewaysRequest()
+                {
+                    NatGatewayIds = new List<string>() { ngwId }
+                };
+                ret = client.DescribeNatGateways(request).NatGateways[0];
+                return ret;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        internal async Task DeleteNatGateway(string ngwId, string vpcId)
+        {
+            //monitorForm.ShowCallbackMessage($"Begin to delete NAT Gateway.");
+            NatGateway ngw = FindNatGatewayById(ngwId);
+            var request = new DeleteNatGatewayRequest() { NatGatewayId = ngwId };
+            await client.DeleteNatGatewayAsync(request);
+            while (ngw.State != NatGatewayState.Deleted)
+            {
+                System.Threading.Thread.Sleep(30000);
+                ngw = FindNatGateway(ngwId);
+                if (ngw != null)
+                {
+                    break;
+                }
+            }
+            //monitorForm.ShowCallbackMessage(
+            //    $"NAT Gateway {ngw.NatGatewayId}|{(ngw.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+        }
+        /************************************************* Route Table ************************************************/
         internal RouteTable CreateRouteTable(string vpcId, string resourceTypeName)
         {
             CreateRouteTableRequest request = new CreateRouteTableRequest()
@@ -96,6 +228,29 @@ namespace Hms.AwsConsole.AwsUtilities
             var response = client.CreateRoute(request);
         }
 
+        internal RouteTable FindRouteTable(string resourceTypeName)
+        {
+            RouteTable ret = null;
+            var response = client.DescribeRouteTables();
+            foreach (var item in response.RouteTables)
+            {
+                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
+                {
+                    ret = item;
+                    break;
+                }
+            }
+            return ret;
+        }
+
+        internal async Task DeleteRouteTable(RouteTable routeTable)
+        {
+            var request = new DeleteRouteTableRequest() { RouteTableId = routeTable.RouteTableId };
+            await client.DeleteRouteTableAsync(request);
+            monitorForm.ShowCallbackMessage(
+                $"Route Table {routeTable.RouteTableId}|{(routeTable.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+        }
+        /************************************************* Instance ************************************************/
         public async Task<List<Instance>> LaunchInstances(
             string resourceTypeName, string subnetId, string amiId, string keyPairName, List<string> mySGIds,
             InstanceType instanceType, int max, int min, string userData = "", string privateIp = null)
@@ -155,95 +310,23 @@ namespace Hms.AwsConsole.AwsUtilities
             return response.Reservation.Instances;
         }
 
-        public async Task<string> CreateSecurityGroup(string groupName, string vpcId, string resourceTypeName)
+        public async Task DeleteInstances(List<string> lstInstanceIds)
         {
-            CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
+            var request = new TerminateInstancesRequest(lstInstanceIds);
+            var response = await client.TerminateInstancesAsync(request);
+            bool allTerminated = false;
+            //Need to find all instances and check status.
+            while (!allTerminated)
             {
-                GroupName = groupName,
-                VpcId = vpcId,
-                Description = "HMS RDS Security Group"
-            };
-            var response = await client.CreateSecurityGroupAsync(request);
-            AssignNameToResource(response.GroupId, resourceTypeName);
-            return response.GroupId;
-        }
-        /*************************************************Find************************************************/
-        internal Vpc FindVpc(string resourceTypeName)
-        {
-            Vpc ret = null;
-            var response = client.DescribeVpcs();
-            foreach (var item in response.Vpcs)
-            {
-                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
+                foreach (var instance in response.TerminatingInstances)
                 {
-                    ret = item;
-                    break;
+                    if (instance.CurrentState.Name != "terminated")
+                    {
+                        break;
+                    }
                 }
             }
-            return ret;
-        }
 
-        internal Subnet FindSubnet(string resourceTypeName)
-        {
-            Subnet ret = null;
-            //DescribeSubnetsRequest request = new DescribeSubnetsRequest();
-            var response = client.DescribeSubnets();
-            foreach (var item in response.Subnets)
-            {
-                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
-                {
-                    ret = item;
-                    break;
-                }
-            }
-            return ret;
-        }
-
-        internal InternetGateway FindInternetGateway(string resourceTypeName)
-        {
-            InternetGateway ret = null;
-            //var request = new DescribeInternetGatewaysRequest();
-            var response = client.DescribeInternetGateways();
-            foreach (var item in response.InternetGateways)
-            {
-                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
-                {
-                    ret = item;
-                    break;
-                }
-            }
-            return ret;
-        }
-
-        internal NatGateway FindNatGateway(string resourceTypeName)
-        {
-            NatGateway ret = null;
-            var request = new DescribeNatGatewaysRequest();
-            var response = client.DescribeNatGateways(request);
-            foreach (var item in response.NatGateways)
-            {
-                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
-                {
-                    ret = item;
-                    break;
-                }
-            }
-            return ret;
-        }
-
-        internal RouteTable FindRouteTable(string resourceTypeName)
-        {
-            RouteTable ret = null;
-            var response = client.DescribeRouteTables();
-            foreach (var item in response.RouteTables)
-            {
-                if (item.Tags.FindIndex(o => o.Key == "Name" && o.Value == FormatresourceName(resourceTypeName)) >= 0)
-                {
-                    ret = item;
-                    break;
-                }
-            }
-            return ret;
         }
 
         public List<ImageModel> GetImageList()
@@ -257,60 +340,26 @@ namespace Hms.AwsConsole.AwsUtilities
             }
             return ret;
         }
-        /*************************************************Delete************************************************/
-        internal async Task DeleteVpc(Vpc vpc)
+        /************************************************* Security Group ************************************************/
+        public async Task<string> CreateSecurityGroup(string groupName, string vpcId, string resourceTypeName)
         {
-            var request = new DeleteVpcRequest(vpc.VpcId);
-            await client.DeleteVpcAsync(request);
-            monitorForm.ShowCallbackMessage(
-                $"Subnet {vpc.VpcId}|{(vpc.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+            CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
+            {
+                GroupName = groupName,
+                VpcId = vpcId,
+                Description = "HMS RDS Security Group"
+            };
+            var response = await client.CreateSecurityGroupAsync(request);
+            AssignNameToResource(response.GroupId, resourceTypeName);
+            return response.GroupId;
         }
 
-        internal async Task DeleteSubnet(Subnet subnet)
-        {
-            var request = new DeleteSubnetRequest(subnet.SubnetId);
-            await client.DeleteSubnetAsync(request);
-            monitorForm.ShowCallbackMessage(
-                $"Subnet {subnet.SubnetId}|{(subnet.Tags.Find(o => o.Key == "Name")).Value} is deleted");
-        }
-
-        internal async Task DeleteSecurityGoup(string sgId, string resourceTypename)
+        internal async Task DeleteSecurityGoup(string sgId)
         {
             var request = new DeleteSecurityGroupRequest(sgId);
             await client.DeleteSecurityGroupAsync(request);
-            monitorForm.ShowCallbackMessage(
-                $"Scurity Group {sgId}|{resourceTypename} is deleted");
-        }
-
-        internal async Task DeleteInternetGateway(InternetGateway igw, string vpcId)
-        {
-            var requestDetach = new DetachInternetGatewayRequest()
-            {
-                InternetGatewayId = igw.InternetGatewayId,
-                VpcId = vpcId
-            };
-            client.DetachInternetGateway(requestDetach);
-
-            var request = new DeleteInternetGatewayRequest() { InternetGatewayId = igw.InternetGatewayId };
-            await client.DeleteInternetGatewayAsync(request);
-            monitorForm.ShowCallbackMessage(
-                $"Internet Gateway {igw.InternetGatewayId}|{(igw.Tags.Find(o => o.Key == "Name")).Value} is deleted");
-        }
-
-        internal async Task DeleteNatGateway(NatGateway ngw, string vpcId)
-        {
-            var request = new DeleteNatGatewayRequest() { NatGatewayId = ngw.NatGatewayId };
-            await client.DeleteNatGatewayAsync(request);
-            monitorForm.ShowCallbackMessage(
-                $"NAT Gateway {ngw.NatGatewayId}|{(ngw.Tags.Find(o => o.Key == "Name")).Value} is deleted");
-        }
-
-        internal async Task DeleteRouteTable(RouteTable routeTable)
-        {
-            var request = new DeleteRouteTableRequest() { RouteTableId = routeTable.RouteTableId };
-            await client.DeleteRouteTableAsync(request);
-            monitorForm.ShowCallbackMessage(
-                $"Route Table {routeTable.RouteTableId}|{(routeTable.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+            //monitorForm.ShowCallbackMessage(
+            //    $"Scurity Group {sgId}|{resourceTypename} is deleted");
         }
 
         /*************************************************Associate************************************************/

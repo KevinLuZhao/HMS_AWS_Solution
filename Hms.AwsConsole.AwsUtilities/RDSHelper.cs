@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Amazon.RDS;
 using Amazon.RDS.Model;
 using Hms.AwsConsole.Model;
+using System.Threading;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
@@ -105,7 +106,6 @@ namespace Hms.AwsConsole.AwsUtilities
         {
             var request = new CreateDBInstanceRequest()
             {
-
                 DBInstanceIdentifier = $"HMS-RDS-{Environment}-DBInstance",
                 DBInstanceClass = "db.t2.micro",
                 //Domain = "safemail.local",
@@ -148,6 +148,52 @@ For supported combinations of instance class and database engine version, see th
             }
         }
 
+        public async Task DeleteRDSInstance(string instanceIdentifier)
+        {
+            var request = new DeleteDBInstanceRequest(instanceIdentifier);
+            var response = await client.DeleteDBInstanceAsync(request);
+            bool isDeleted = false;
+            while (!isDeleted)
+            {
+                Thread.Sleep(20000);
+                //if (FindRDSInstance(instanceIdentifier).DBInstanceStatus == "deleted")
+                AwsRdsInstance instance = FindRDSInstance(instanceIdentifier);
+                if (instance == null || instance.Status == "deleted" )
+                    isDeleted = true;
+            }
+        }
+
+        public AwsRdsInstance FindRDSInstance(string instanceIdentifier)
+        {
+            var request = new DescribeDBInstancesRequest()
+            {
+                DBInstanceIdentifier = instanceIdentifier
+            };
+            try
+            {
+                var response = client.DescribeDBInstances(request);
+                if (response.DBInstances.Count > 0)
+                {
+                    DBInstance dbInstance = response.DBInstances[0];
+                    AwsRdsInstance instance = new AwsRdsInstance()
+                    {
+                        DBInstanceArn = dbInstance.DBInstanceArn,
+                        DBInstanceIdentifier = dbInstance.DBInstanceIdentifier,
+                        Status = dbInstance.DBInstanceStatus,
+                        MultiAZ = dbInstance.MultiAZ,
+                        Endpoint = dbInstance.Endpoint.Address+":"+dbInstance.Endpoint.Port
+                    };
+                    return instance;
+                }
+                else
+                    return null;
+            }
+            catch(Exception ex)
+            {
+                return null;
+            }
+        }
+
         public async Task<DBSubnetGroup> CreateDBSubnetGroup(List<string> subnetIds)
         {
             var request = new CreateDBSubnetGroupRequest()
@@ -167,6 +213,15 @@ For supported combinations of instance class and database engine version, see th
             {
                 throw ex;
             }
+        }
+
+        public async Task DeletDBSubnetGroup(string dbSubnetGroupName)
+        {
+            var request = new DeleteDBSubnetGroupRequest()
+            {
+                DBSubnetGroupName = dbSubnetGroupName
+            };
+            var response = await client.DeleteDBSubnetGroupAsync(request);
         }
 
         private string FormatresourceName(string name)

@@ -14,13 +14,6 @@ namespace Hms.AwsConsole.BLL
         {
             try
             {
-                //Level1Builder level1 = new Level1Builder(env, form);
-                //await level1.Teardown();
-                //var response = await level1.Creat();
-                //InfraEntitiesServices service = new InfraEntitiesServices();
-                //service.SaveInfraEntities(response);
-                //Level2Builder level2 = new Level2Builder(response, env, form);
-                //await level2.Creat();
                 var level1 = new DBLevel1InfraBuilder((Model.Environment)Enum.Parse(typeof(Model.Environment), env), form);
                 var response = await level1.Creat();
                 var service = new InfraEntitiesServices();
@@ -30,6 +23,28 @@ namespace Hms.AwsConsole.BLL
             {
                 LogServices.WriteLog(ex.Message + " Stack trace: " + ex.StackTrace, LogType.Error, env);
             }
+        }
+
+        public async Task Destory(string env, IWindowForm form)
+        {
+            try
+            {
+                var builder = new DBLevel1InfraBuilder((Model.Environment)Enum.Parse(typeof(Model.Environment), env), form);
+                //var response = await level1.Creat();
+                var service = new InfraEntitiesServices();
+                var dbInfraEntities = service.GetDbInfraEntities(env);
+                
+            }
+            catch (Exception ex)
+            {
+                LogServices.WriteLog(ex.Message + " Stack trace: " + ex.StackTrace, LogType.Error, env);
+            }
+        }
+
+        public void GetDBInstanceStatus(string env, string instanceIdentifier)
+        {
+            RDSHelper helper = new RDSHelper((Model.Environment)Enum.Parse(typeof(Model.Environment), env), "us-east-2");
+            helper.FindRDSInstance(instanceIdentifier);
         }
     }
 }
