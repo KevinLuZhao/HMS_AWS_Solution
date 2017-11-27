@@ -15,10 +15,11 @@ namespace Hms.AwsConsole.BLL
         {
             try
             {
-                ApplicationsLevel1Builder level1 = new ApplicationsLevel1Builder(env, form);
-                await level1.Teardown();
-                var response = await level1.Creat();
                 InfraEntitiesServices service = new InfraEntitiesServices();
+                var entities = service.GetApplicationInfraEntities(env);
+                ApplicationsLevel1Builder level1 = new ApplicationsLevel1Builder(env, form);
+                await level1.Destroy(entities);
+                var response = await level1.Creat();
                 service.SaveApplicationInfraEntities(response);
                 ApplicationsLevel2Builder level2 = new ApplicationsLevel2Builder(response, env, form);
                 await level2.Creat();

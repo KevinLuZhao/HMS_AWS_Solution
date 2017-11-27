@@ -54,43 +54,43 @@ namespace Hms.AwsConsole.AwsUtilities
             try
             {
                 var responseVpc = await ec2Helper.CreateVpc(STR_VPC, CIDR_VPC);
-                var vpc = responseVpc.Vpc;
-                entities.VpcId = vpc.VpcId;
-
+                //var vpc = responseVpc.Vpc;
+                entities.VpcId = responseVpc;
+                ShowCreatedMessage(entities.VpcId, STR_VPC);
                 /******************************************** Security Group ********************************************/
                 var responsePublicSG = await CreatePublicSecurityGroup();
                 entities.PublicSecurityGroupId = responsePublicSG;
-
+                ShowCreatedMessage(entities.PublicSecurityGroupId, STR_PUBLIC_SECURITYGROUP);
                 //Later
                 //var responsePrivateSG = CreatePrivateSecurityGroup();
                 //entities.PrivateSecurityGroupId = responsePrivateSG;
                 entities.PrivateSecurityGroupId = "Wait";
 
-                var responsePublicSubnet = await ec2Helper.CreateSubnet(vpc.VpcId, STR_PUBLIC_SUBNET, CIDR_PUBLIC_SUBNET);
-                var publicSubnet = responsePublicSubnet.Subnet;
-                entities.PublicSubnetId = publicSubnet.SubnetId;
+                var responsePublicSubnet = await ec2Helper.CreateSubnet(entities.VpcId, STR_PUBLIC_SUBNET, CIDR_PUBLIC_SUBNET);
+                //var publicSubnet = responsePublicSubnet.Subnet;
+                entities.PublicSubnetId = responsePublicSubnet;
+                ShowCreatedMessage(entities.PublicSubnetId, STR_PUBLIC_SUBNET);
 
-                var responsePrivateSubnet = await ec2Helper.CreateSubnet(vpc.VpcId, STR_PRIVATE_SUBNET, CIDR_PRIVATE_SUBNET);
-                var privateSubnet = responsePrivateSubnet.Subnet;
-                entities.PrivateSubnetId = privateSubnet.SubnetId;
-
+                var responsePrivateSubnet = await ec2Helper.CreateSubnet(entities.VpcId, STR_PRIVATE_SUBNET, CIDR_PRIVATE_SUBNET);
+                //var privateSubnet = responsePrivateSubnet.Subnet;
+                entities.PrivateSubnetId = responsePrivateSubnet;
+                ShowCreatedMessage(entities.PrivateSubnetId, STR_PRIVATE_SUBNET);
                 /******************************************** Internet Gateway ********************************************/
-                var responseIgw = await ec2Helper.CreateInternetGateway(vpc.VpcId, STR_INTERNET_GATEWAY);
-                var igw = responseIgw.InternetGateway;
-                entities.InternetGatewayId = igw.InternetGatewayId;
-
+                var responseIgw = await ec2Helper.CreateInternetGateway(entities.VpcId, STR_INTERNET_GATEWAY);
+                entities.InternetGatewayId = responseIgw;
+                ShowCreatedMessage(entities.InternetGatewayId, STR_INTERNET_GATEWAY);
                 /******************************************** Nat Gateway ********************************************/
-                var responseNgw = await ec2Helper.CreateNatGateway(privateSubnet.SubnetId, "eipalloc-bf81d491", STR_NAT_GATEWAY);
-                var ngw = responseNgw.NatGateway;
-                entities.NatGatewayId = ngw.NatGatewayId;
-
+                var responseNgw = await ec2Helper.CreateNatGateway(entities.PrivateSubnetId, "eipalloc-bf81d491", STR_NAT_GATEWAY);
+                entities.NatGatewayId = responseNgw;
+                ShowCreatedMessage(entities.NatGatewayId, STR_NAT_GATEWAY);
                 /******************************************** Public Route Table ********************************************/
-                var publicRouteTable = CreatePublicRouteTable(vpc.VpcId, publicSubnet.SubnetId, igw.InternetGatewayId);
-                entities.PublicRouteTableId = publicRouteTable.RouteTableId;
-
+                var responsePublicRoutetable = CreatePublicRouteTable(entities.VpcId, entities.PublicSubnetId, responseIgw);
+                entities.PublicRouteTableId = responsePublicRoutetable;
+                ShowCreatedMessage(entities.PublicRouteTableId, STR_PUBLIC_ROUTETABLE);
                 /******************************************** Private Route Table ********************************************/
-                var privateRouteTable = CreatePrivateRouteTable(vpc.VpcId, privateSubnet.SubnetId, ngw.NatGatewayId);
-                entities.PrivateRouteTableId = privateRouteTable.RouteTableId;
+                var responsePrivateRouteTable = CreatePrivateRouteTable(entities.VpcId, entities.PrivateSubnetId, responseNgw);
+                entities.PrivateRouteTableId = responsePrivateRouteTable;
+                ShowCreatedMessage(entities.PrivateRouteTableId, STR_PRIVATE_ROUTETABLE);
 
                 return entities;
             }
@@ -100,81 +100,95 @@ namespace Hms.AwsConsole.AwsUtilities
             }
         }
 
-        public async Task Teardown()
+        private void ShowCreatedMessage(string resourceId, string resourceTypeName)
         {
-            Vpc existingVpc = ec2Helper.FindVpc(STR_VPC);
-            
-            if (existingVpc != null)
-            {
-                var publicSubnet = ec2Helper.FindSubnet(STR_PUBLIC_SUBNET);
-                var privateSubnet = ec2Helper.FindSubnet(STR_PRIVATE_SUBNET);
-                var publicRouteTable = ec2Helper.FindRouteTable(STR_PUBLIC_ROUTETABLE);
-                var internetGateway = ec2Helper.FindInternetGateway(STR_INTERNET_GATEWAY);
-                var natGateway = ec2Helper.FindNatGateway(STR_NAT_GATEWAY);
-                var privateRouteTable = ec2Helper.FindRouteTable(STR_PRIVATE_ROUTETABLE);
-
-                /*Notice the order:
-                 Before delete a Internet Gateway must disaasociate the public IP, or Elastic IP from VPC, 
-                 otherwise may get error: Network vpc-80fa87ef has some mapped public address(es). Please unmap those public address(es) before detaching the gateway.
-                 Before disassociate the address, you must delete the Nat gateway which associate with the Elastic IP
-                 Otherwise may get error: You do not have permission to access the specified resource. 
-                 */
-
-                if (publicRouteTable != null && publicSubnet != null)
-                {
-                    ec2Helper.DisassociateRouteTableToSubnet(publicRouteTable, publicSubnet);
-                    await ec2Helper.DeleteRouteTable(publicRouteTable);
-                }
-
-                if (privateRouteTable != null && privateSubnet != null)
-                {
-                    ec2Helper.DisassociateRouteTableToSubnet(privateRouteTable, privateSubnet);
-                    await ec2Helper.DeleteRouteTable(privateRouteTable);
-                }
-
-                if (natGateway != null)
-                {
-                    await ec2Helper.DeleteNatGateway(natGateway, existingVpc.VpcId);
-                }
-
-                ec2Helper.DisassociateAddress("18.220.208.101");
-
-                if (internetGateway != null)
-                {
-                    await ec2Helper.DeleteInternetGateway(internetGateway, existingVpc.VpcId);
-                }
-
-                if (publicSubnet != null)
-                {
-                    await ec2Helper.DeleteSubnet(publicSubnet);
-                }
-
-                if (privateSubnet != null)
-                {
-                    await ec2Helper.DeleteSubnet(privateSubnet);
-                }
-
-                //await ec2Helper.DeleteSecurityGoup()
-
-                await ec2Helper.DeleteVpc(existingVpc);
-            }
+            monitorForm.ShowCallbackMessage($"Resource {resourceId} is created, resource type: {STR_PUBLIC_SUBNET}");
         }
 
-        private RouteTable CreatePublicRouteTable(string vpcId, string subnetId, string igwId)
+        public async Task Destroy(ApplicationInfraEntities entities)
+        {
+            //Vpc existingVpc = ec2Helper.FindVpc(STR_VPC);
+
+            //if (existingVpc != null)
+            //{
+            //var publicSubnet = ec2Helper.FindSubnet(STR_PUBLIC_SUBNET);
+            //var privateSubnet = ec2Helper.FindSubnet(STR_PRIVATE_SUBNET);
+            //var publicRouteTable = ec2Helper.FindRouteTable(STR_PUBLIC_ROUTETABLE);
+            //var internetGateway = ec2Helper.FindInternetGateway(STR_INTERNET_GATEWAY);
+            //var natGateway = ec2Helper.FindNatGateway(STR_NAT_GATEWAY);
+            //var privateRouteTable = ec2Helper.FindRouteTable(STR_PRIVATE_ROUTETABLE);
+
+            /*Notice the order:
+             Before delete a Internet Gateway must disaasociate the public IP, or Elastic IP from VPC, 
+             otherwise may get error: Network vpc-80fa87ef has some mapped public address(es). Please unmap those public address(es) before detaching the gateway.
+             Before disassociate the address, you must delete the Nat gateway which associate with the Elastic IP
+             Otherwise may get error: You do not have permission to access the specified resource. 
+             */
+            string response;
+            if (entities.PublicRouteTableId != null && entities.PublicSubnetId != null)
+            {
+                ec2Helper.DisassociateRouteTableToSubnet(entities.PublicRouteTableId, entities.PublicSubnetId);
+                response = await ec2Helper.DeleteRouteTable(entities.PublicRouteTableId);
+                monitorForm.ShowCallbackMessage($"{STR_PUBLIC_ROUTETABLE}: {response}");
+            }
+
+            if (entities.PrivateRouteTableId != null && entities.PrivateSubnetId != null)
+            {
+                ec2Helper.DisassociateRouteTableToSubnet(entities.PrivateRouteTableId, entities.PrivateSubnetId);
+                response = await ec2Helper.DeleteRouteTable(entities.PrivateRouteTableId);
+                monitorForm.ShowCallbackMessage($"{STR_PRIVATE_ROUTETABLE}: {response}");
+            }
+
+            if (entities.NatGatewayId != null)
+            {
+                monitorForm.ShowCallbackMessage($"{STR_NAT_GATEWAY}: Delete begin...");
+                response = await ec2Helper.DeleteNatGateway(entities.NatGatewayId, entities.VpcId);
+                monitorForm.ShowCallbackMessage($"{STR_NAT_GATEWAY}: {response}");
+            }
+
+            //Elastice IP for NAT gateway
+            ec2Helper.DisassociateAddress("18.220.208.101");
+
+            if (entities.InternetGatewayId != null)
+            {
+                response = await ec2Helper.DeleteInternetGateway(entities.InternetGatewayId, entities.VpcId);
+                monitorForm.ShowCallbackMessage($"{STR_INTERNET_GATEWAY}: {response}");
+            }
+
+            if (entities.PublicSubnetId != null)
+            {
+                response = await ec2Helper.DeleteSubnet(entities.PublicSubnetId);
+                monitorForm.ShowCallbackMessage($"{STR_PUBLIC_SUBNET}: {response}");
+            }
+
+            if (entities.PrivateSubnetId != null)
+            {
+                response = await ec2Helper.DeleteSubnet(entities.PrivateSubnetId);
+                monitorForm.ShowCallbackMessage($"{STR_PRIVATE_SUBNET}: {response}");
+            }
+
+            //await ec2Helper.DeleteSecurityGoup()
+
+            response = await ec2Helper.DeleteVpc(entities.VpcId);
+            monitorForm.ShowCallbackMessage($"{STR_VPC}: {response}");
+            //}
+        }
+
+        private string CreatePublicRouteTable(string vpcId, string subnetId, string igwId)
         {
             var response = ec2Helper.CreateRouteTable(vpcId, STR_PUBLIC_ROUTETABLE);
-            ec2Helper.CreateRouteForRouteTable(igwId, response.RouteTableId);
-            ec2Helper.AssociateRouteTableToSubnet(subnetId, response.RouteTableId);
-            monitorForm.ShowCallbackMessage($"Public route table is created.");
+            ec2Helper.CreateRouteForRouteTable(igwId, "", CIDR_ALL, response);
+            ec2Helper.AssociateRouteTableToSubnet(subnetId, response);
+            //monitorForm.ShowCallbackMessage($"Public route table is created.");
             return response;
         }
 
-        private RouteTable CreatePrivateRouteTable(string vpcId, string subnetId, string ngwId)
+        private string CreatePrivateRouteTable(string vpcId, string subnetId, string ngwId)
         {
             var response = ec2Helper.CreateRouteTable(vpcId, STR_PRIVATE_ROUTETABLE);
-            response.Routes.Add(new Route { DestinationCidrBlock = "0.0.0.0/0", NatGatewayId = ngwId });
-            ec2Helper.AssociateRouteTableToSubnet(subnetId, response.RouteTableId);
-            monitorForm.ShowCallbackMessage($"Private route table is created.");
+            ec2Helper.CreateRouteForRouteTable("", ngwId, CIDR_ALL, response);
+            ec2Helper.AssociateRouteTableToSubnet(subnetId, response);
+            //monitorForm.ShowCallbackMessage($"Private route table is created.");
             return response;
         }
 

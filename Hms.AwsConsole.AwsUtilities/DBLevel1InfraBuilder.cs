@@ -40,17 +40,17 @@ namespace Hms.AwsConsole.AwsUtilities
         {
             //Create VPC
             var vpcResponse = await ec2Helper.CreateVpc(STR_VPC, CIDR_VPC);
-            entities.VpcId = vpcResponse.Vpc.VpcId;
+            entities.VpcId = vpcResponse;
 
             //Create Subnets
             //Subnet group has to include at least two subnets, otherwise, CreateDBSubnetGroup 
             //command will halt there forever
             var subnetResponseA = await ec2Helper.
-                CreateSubnet(vpcResponse.Vpc.VpcId, STR_DB_SUBNET_A, CIDR_DB_SUBNET_A, "us-east-2a");
-            entities.SubnetAId = subnetResponseA.Subnet.SubnetId;
+                CreateSubnet(entities.VpcId, STR_DB_SUBNET_A, CIDR_DB_SUBNET_A, "us-east-2a");
+            entities.SubnetAId = subnetResponseA;
             var subnetResponseB = await ec2Helper.
-                CreateSubnet(vpcResponse.Vpc.VpcId, STR_DB_SUBNET_B, CIDR_DB_SUBNET_B, "us-east-2b");
-            entities.SubnetBId = subnetResponseB.Subnet.SubnetId;
+                CreateSubnet(entities.VpcId, STR_DB_SUBNET_B, CIDR_DB_SUBNET_B, "us-east-2b");
+            entities.SubnetBId = subnetResponseB;
 
             //Create Security Groups
             var securityGroups = new List<string>();
@@ -60,7 +60,7 @@ namespace Hms.AwsConsole.AwsUtilities
             RDSHelper rdsHelper = new RDSHelper(environment, "us-east-2");
             //Create DBSubnetGroup
             var dbSubnetGroupResponse = await rdsHelper.CreateDBSubnetGroup(
-                new List<string>() { subnetResponseA.Subnet.SubnetId, subnetResponseB.Subnet.SubnetId });
+                new List<string>() { entities.SubnetAId, entities.SubnetBId });
             entities.DBSubnetGoupId = dbSubnetGroupResponse.DBSubnetGroupName;
 
             //Create RDS Instance
@@ -76,7 +76,7 @@ namespace Hms.AwsConsole.AwsUtilities
             try
             {
                 await rdsHelper.DeleteRDSInstance(entities.DBInstanceId);
-                await ec2Helper.DeleteSecurityGoup(entities.DBSecurityGroupId, STR_RDS_SECURITY_GROUP);
+                await ec2Helper.DeleteSecurityGoup(entities.DBSecurityGroupId);
                 await ec2Helper.DeleteSubnet(entities.SubnetAId);
                 return "Success";
             }

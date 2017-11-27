@@ -24,13 +24,13 @@ namespace Hms.AwsConsole.AwsUtilities
             monitorForm = frm;
         }
         /************************************************* VPC ************************************************/
-        internal async Task<CreateVpcResponse> CreateVpc(string resourceTypeName, string cidr)
+        public async Task<string> CreateVpc(string resourceTypeName, string cidr)
         {
             CreateVpcRequest requestVPC = new CreateVpcRequest(cidr);
             var responseVPC = await client.CreateVpcAsync(requestVPC);
             string vpcId = responseVPC.Vpc.VpcId;
             AssignNameToResource(vpcId, resourceTypeName);
-            return responseVPC;
+            return responseVPC.Vpc.VpcId;
         }
 
         internal Vpc FindVpc(string resourceTypeName)
@@ -48,16 +48,23 @@ namespace Hms.AwsConsole.AwsUtilities
             return ret;
         }
 
-        internal async Task DeleteVpc(string vpcId)
+        public async Task<string> DeleteVpc(string vpcId)
         {
-            var request = new DeleteVpcRequest(vpcId);
-            await client.DeleteVpcAsync(request);
-            //monitorForm.ShowCallbackMessage(
-            //    $"Subnet {vpc.VpcId}|{(vpc.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+
+            try
+            {
+                var request = new DeleteVpcRequest(vpcId);
+                await client.DeleteVpcAsync(request);
+                return $"Delete vpc {vpcId} successfully!";
+            }
+            catch (Exception ex)
+            {
+                return $"Faied to delete vpc {vpcId}. Error message: {ex.Message}";
+            }
         }
 
         /************************************************* Subnet ************************************************/
-        internal async Task<CreateSubnetResponse> CreateSubnet(
+        public async Task<string> CreateSubnet(
             string vpcId, string resourceTypeName, string cidr, string az = null)
         {
             CreateSubnetRequest request = new CreateSubnetRequest(vpcId, cidr);
@@ -66,7 +73,7 @@ namespace Hms.AwsConsole.AwsUtilities
             var response = await client.CreateSubnetAsync(request);
             string publicSubnetId = response.Subnet.SubnetId;
             AssignNameToResource(publicSubnetId, resourceTypeName);
-            return response;
+            return response.Subnet.SubnetId;
         }
 
         internal Subnet FindSubnet(string resourceTypeName)
@@ -85,15 +92,32 @@ namespace Hms.AwsConsole.AwsUtilities
             return ret;
         }
 
-        internal async Task DeleteSubnet(string subnetId)
+        internal Subnet FindSubnetByID(string id)
         {
-            var request = new DeleteSubnetRequest(subnetId);
-            await client.DeleteSubnetAsync(request);
-            //monitorForm.ShowCallbackMessage(
-            //    $"Subnet {subnet.SubnetId}|{(subnet.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+            var request = new DescribeSubnetsRequest()
+            {
+                SubnetIds = new List<string>() { id }
+            };
+            //DescribeSubnetsRequest request = new DescribeSubnetsRequest();
+            var response = client.DescribeSubnets(request);
+            return response.Subnets[0];
+        }
+
+        public async Task<string> DeleteSubnet(string subnetId)
+        {
+            try
+            {
+                var request = new DeleteSubnetRequest(subnetId);
+                await client.DeleteSubnetAsync(request);
+                return $"Delete subnet {subnetId} successfully!";
+            }
+            catch (Exception ex)
+            {
+                return $"Faied to delete subnet {subnetId}. Error message: {ex.Message}";
+            }
         }
         /************************************************* Gateway ************************************************/
-        internal async Task<string> CreateInternetGateway(string vpcId, string resourceTypeName)
+        public async Task<string> CreateInternetGateway(string vpcId, string resourceTypeName)
         {
             var response = await client.CreateInternetGatewayAsync();
             var igwId = response.InternetGateway.InternetGatewayId;
@@ -125,22 +149,28 @@ namespace Hms.AwsConsole.AwsUtilities
             return ret;
         }
 
-        internal async Task DeleteInternetGateway(string igwId, string vpcId)
+        public async Task<string> DeleteInternetGateway(string igwId, string vpcId)
         {
-            var requestDetach = new DetachInternetGatewayRequest()
+            try
             {
-                InternetGatewayId = igwId,
-                VpcId = vpcId
-            };
-            client.DetachInternetGateway(requestDetach);
+                var requestDetach = new DetachInternetGatewayRequest()
+                {
+                    InternetGatewayId = igwId,
+                    VpcId = vpcId
+                };
+                client.DetachInternetGateway(requestDetach);
 
-            var request = new DeleteInternetGatewayRequest() { InternetGatewayId = igwId };
-            await client.DeleteInternetGatewayAsync(request);
-            //monitorForm.ShowCallbackMessage(
-            //    $"Internet Gateway {igw.InternetGatewayId}|{(igw.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+                var request = new DeleteInternetGatewayRequest() { InternetGatewayId = igwId };
+                await client.DeleteInternetGatewayAsync(request);
+                return $"Delete internet gateway {igwId} successfully!";
+            }
+            catch (Exception ex)
+            {
+                return $"Faied to delete internet gateway {igwId}. Error message: {ex.Message}";
+            }
         }
 
-        internal async Task<string> CreateNatGateway(string subnetId, string allocationId, string resourceTypeName)
+        public async Task<string> CreateNatGateway(string subnetId, string allocationId, string resourceTypeName)
         {
             var request = new CreateNatGatewayRequest()
             {
@@ -187,26 +217,33 @@ namespace Hms.AwsConsole.AwsUtilities
             }
         }
 
-        internal async Task DeleteNatGateway(string ngwId, string vpcId)
+        public async Task<string> DeleteNatGateway(string ngwId, string vpcId)
         {
-            //monitorForm.ShowCallbackMessage($"Begin to delete NAT Gateway.");
-            NatGateway ngw = FindNatGatewayById(ngwId);
-            var request = new DeleteNatGatewayRequest() { NatGatewayId = ngwId };
-            await client.DeleteNatGatewayAsync(request);
-            while (ngw.State != NatGatewayState.Deleted)
+            try
             {
-                System.Threading.Thread.Sleep(30000);
-                ngw = FindNatGateway(ngwId);
-                if (ngw != null)
+                NatGateway ngw = FindNatGatewayById(ngwId);
+                var request = new DeleteNatGatewayRequest() { NatGatewayId = ngwId };
+                await client.DeleteNatGatewayAsync(request);
+                while (ngw.State != NatGatewayState.Deleted)
                 {
-                    break;
+                    System.Threading.Thread.Sleep(30000);
+                    ngw = FindNatGateway(ngwId);
+                    if (ngw != null)
+                    {
+                        break;
+                    }
                 }
+                return $"Delete NAT gateway {ngwId} successfully!";
+            }
+            catch (Exception ex)
+            {
+                return $"Faied to delete NAT gateway {ngwId}. Error message: {ex.Message}";
             }
             //monitorForm.ShowCallbackMessage(
             //    $"NAT Gateway {ngw.NatGatewayId}|{(ngw.Tags.Find(o => o.Key == "Name")).Value} is deleted");
         }
         /************************************************* Route Table ************************************************/
-        internal RouteTable CreateRouteTable(string vpcId, string resourceTypeName)
+        internal string CreateRouteTable(string vpcId, string resourceTypeName)
         {
             CreateRouteTableRequest request = new CreateRouteTableRequest()
             {
@@ -214,18 +251,20 @@ namespace Hms.AwsConsole.AwsUtilities
             };
             var response = client.CreateRouteTable(request);
             AssignNameToResource(response.RouteTable.RouteTableId, resourceTypeName);
-            return response.RouteTable;
+            return response.RouteTable.RouteTableId;
         }
 
-        internal void CreateRouteForRouteTable(string gatewayId, string routeTableId)
+        internal bool CreateRouteForRouteTable(string gatewayId, string natGatewayId, string destinationCidrBlock, string routeTableId)
         {
-            CreateRouteRequest request = new CreateRouteRequest()
-            {
-                GatewayId = gatewayId,
-                DestinationCidrBlock = CIDR_ALL,
-                RouteTableId = routeTableId
-            };
-            var response = client.CreateRoute(request);
+            CreateRouteRequest request = new CreateRouteRequest();
+            if (!string.IsNullOrEmpty(gatewayId))
+                request.GatewayId = gatewayId;
+            if (!string.IsNullOrEmpty(natGatewayId))
+                request.NatGatewayId = natGatewayId;
+            request.DestinationCidrBlock = destinationCidrBlock;
+            request.RouteTableId = routeTableId;
+
+            return client.CreateRoute(request).Return;
         }
 
         internal RouteTable FindRouteTable(string resourceTypeName)
@@ -243,12 +282,41 @@ namespace Hms.AwsConsole.AwsUtilities
             return ret;
         }
 
-        internal async Task DeleteRouteTable(RouteTable routeTable)
+        internal RouteTable FindRouteTableByID(string routeTableId)
         {
-            var request = new DeleteRouteTableRequest() { RouteTableId = routeTable.RouteTableId };
-            await client.DeleteRouteTableAsync(request);
-            monitorForm.ShowCallbackMessage(
-                $"Route Table {routeTable.RouteTableId}|{(routeTable.Tags.Find(o => o.Key == "Name")).Value} is deleted");
+            var request = new DescribeRouteTablesRequest() { RouteTableIds = new List<string>() { routeTableId } };
+            try
+            {
+                var response = client.DescribeRouteTables(request);
+                if (response.RouteTables != null && response.RouteTables.Count > 0)
+                {
+                    return response.RouteTables[0];
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        internal async Task<string> DeleteRouteTable(string routeTableId)
+        {
+            try
+            {
+                var request = new DeleteRouteTableRequest() { RouteTableId = routeTableId };
+                await client.DeleteRouteTableAsync(request);
+                return $"Delete routetable {routeTableId} successfully!";
+            }
+            catch (Exception ex)
+            {
+                return $"Faied to delete routetable {routeTableId}. Error message: {ex.Message}";
+            }
+            //monitorForm.ShowCallbackMessage(
+            //    $"Route Table {routeTable.RouteTableId}|{(routeTable.Tags.Find(o => o.Key == "Name")).Value} is deleted");
         }
         /************************************************* Instance ************************************************/
         public async Task<List<Instance>> LaunchInstances(
@@ -310,23 +378,34 @@ namespace Hms.AwsConsole.AwsUtilities
             return response.Reservation.Instances;
         }
 
-        public async Task DeleteInstances(List<string> lstInstanceIds)
+        public async Task<string> DeleteInstances(List<string> lstInstanceIds)
         {
-            var request = new TerminateInstancesRequest(lstInstanceIds);
-            var response = await client.TerminateInstancesAsync(request);
-            bool allTerminated = false;
-            //Need to find all instances and check status.
-            while (!allTerminated)
+
+            try
             {
-                foreach (var instance in response.TerminatingInstances)
+                var request = new TerminateInstancesRequest(lstInstanceIds);
+                var response = await client.TerminateInstancesAsync(request);
+                bool allTerminated = false;
+                //Need to find all instances and check status.
+                while (!allTerminated)
                 {
-                    if (instance.CurrentState.Name != "terminated")
+                    System.Threading.Thread.Sleep(30000);
+                    allTerminated = true;
+                    foreach (var instance in response.TerminatingInstances)
                     {
-                        break;
+                        if (instance.CurrentState.Name != "terminated")
+                        {
+                            allTerminated = false;
+                            break;
+                        }
                     }
                 }
+                return $"Delete EC2 instances {string.Join(", ", lstInstanceIds.ToArray())} successfully!";
             }
-
+            catch (Exception ex)
+            {
+                return $"Faied to delete EC2 instances {string.Join(", ", lstInstanceIds.ToArray())} . Error message: {ex.Message}";
+            }
         }
 
         public List<ImageModel> GetImageList()
@@ -354,12 +433,18 @@ namespace Hms.AwsConsole.AwsUtilities
             return response.GroupId;
         }
 
-        internal async Task DeleteSecurityGoup(string sgId)
+        internal async Task<string> DeleteSecurityGoup(string sgId)
         {
-            var request = new DeleteSecurityGroupRequest(sgId);
-            await client.DeleteSecurityGroupAsync(request);
-            //monitorForm.ShowCallbackMessage(
-            //    $"Scurity Group {sgId}|{resourceTypename} is deleted");
+            try
+            {
+                var request = new DeleteSecurityGroupRequest(sgId);
+                await client.DeleteSecurityGroupAsync(request);
+                return $"Delete routetable {sgId} successfully!";
+            }
+            catch (Exception ex)
+            {
+                return $"Faied to delete routetable {sgId}. Error message: {ex.Message}";
+            }
         }
 
         /*************************************************Associate************************************************/
@@ -374,11 +459,12 @@ namespace Hms.AwsConsole.AwsUtilities
             client.AssociateRouteTable(request);
         }
 
-        internal void DisassociateRouteTableToSubnet(RouteTable routeTable, Subnet subnet)
+        internal void DisassociateRouteTableToSubnet(string routeTableId, string subnetId)
         {
+            var routeTable = FindRouteTableByID(routeTableId);
             var request = new DisassociateRouteTableRequest()
             {
-                AssociationId = routeTable.Associations.Find(o => o.SubnetId == subnet.SubnetId).RouteTableAssociationId
+                AssociationId = routeTable.Associations.Find(o => o.SubnetId == subnetId).RouteTableAssociationId
             };
             client.DisassociateRouteTable(request);
         }
@@ -430,7 +516,7 @@ namespace Hms.AwsConsole.AwsUtilities
             reqCreateTag.Tags.Add(new Tag("Name", resourceName));
 
             client.CreateTags(reqCreateTag);
-            monitorForm.ShowCallbackMessage($"Resource {resourceId} is created, name: {resourceName}");
+            //monitorForm.ShowCallbackMessage($"Resource {resourceId} is created, name: {resourceName}");
         }
 
         public async Task AssignRulesToSecurityGroup(string securityGroupId, List<SecurityRule> rules)
