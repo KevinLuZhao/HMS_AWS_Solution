@@ -45,7 +45,7 @@ namespace Hms.AwsConsole
                 ApplicationsInfraBuilder applicationBuilder = new ApplicationsInfraBuilder();
                 btnCreate.Click += new EventHandler(
                     async (s, arg) => await applicationBuilder.CreateNewInfrastructure
-                    (GlobalVariables.Enviroment.ToString(), this));
+                    (1, GlobalVariables.Enviroment.ToString(), this));
 
                 DBInfraBuilder dbBuilder = new DBInfraBuilder();
                 btnCreateRDS.Click += new EventHandler(

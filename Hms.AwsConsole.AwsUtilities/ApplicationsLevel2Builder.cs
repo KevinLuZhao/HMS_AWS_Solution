@@ -18,7 +18,9 @@ namespace Hms.AwsConsole.AwsUtilities
         ApplicationInfraEntities entities;
 
         const string STR_JUMPBOX_INSTANCE = "Jumpbox";
-        const string STR_WEBSERVER_INSTANCE = "WebServer";
+        const string STR_WEBSERVER_INSTANCE = "HMS-WEB-SERVER";
+        const string STR_SERVICES_INSTANCE = "HMS-SERVICES-SERVER";
+        const string STR_EMAILFILTER_INSTANCE = "HMS-EMAILFILTER-SERVER";
 
         public ApplicationsLevel2Builder(ApplicationInfraEntities entities, string env, IWindowForm frm)
         {
@@ -32,6 +34,8 @@ namespace Hms.AwsConsole.AwsUtilities
         {
             await LaunchJumpbox();
             await LaunchWebServer();
+            await LaunchServicesServer();
+            await LaunchEmailFilterServer();
         }
 
         private async Task<Instance> LaunchJumpbox()
@@ -58,19 +62,28 @@ namespace Hms.AwsConsole.AwsUtilities
         private async Task<Instance> LaunchWebServer()
         {
             var response = await ec2Helper.LaunchInstances(STR_WEBSERVER_INSTANCE,
-                entities.PublicSubnetId, "ami-3f4a645a", "hms_qa_keypair",
+                entities.PublicSubnetId, "ami-986b42fd", "hms_qa_keypair",
                 new List<string> { entities.PublicSecurityGroupId },
                 InstanceType.T2Micro, 1, 1);
             return response[0];
         }
 
-        //private async Task<Instance> LaunchServicesServer()
-        //{
-        //    var response = await ec2Helper.LaunchInstances(
-        //        entities.PrivateSubnetId, "ami-3f4a645a", "hms_qa_keypair",
-        //        null, InstanceType.T2Micro, 1, 1);
-        //    return response;
-        //}
+        private async Task<Instance> LaunchServicesServer()
+        {
+            var response = await ec2Helper.LaunchInstances(STR_SERVICES_INSTANCE,
+                entities.PrivateSubnetId, "ami-40684125", "hms_qa_keypair",
+                new List<string> { entities.PrivateSecurityGroupId },
+                InstanceType.T2Micro, 1, 1);
+            return response[0];
+        }
+
+        private async Task<Instance> LaunchEmailFilterServer()
+        {
+            var response = await ec2Helper.LaunchInstances(STR_EMAILFILTER_INSTANCE
+                entities.PrivateSubnetId, "ami-9b6b42fe", "hms_qa_keypair",
+                null, InstanceType.T2Medium, 1, 1);
+            return response;
+        }
 
         //private async Task<Instance> LaunchEmailServiceServer()
         //{

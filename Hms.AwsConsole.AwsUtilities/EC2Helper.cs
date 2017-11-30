@@ -419,6 +419,25 @@ namespace Hms.AwsConsole.AwsUtilities
             }
             return ret;
         }
+
+        public ImageModel FindAMIByName(string name)
+        {
+            DescribeImagesRequest request = new DescribeImagesRequest() { Owners = new List<string> { "157799504602" } };
+            var response = client.DescribeImages(request);
+            //var image = response.Images.Find(o=>o.Tags.FindIndex(p=>p.Key=="Name" && p.Value==name)>=0);
+            var image = response.Images.Find(o => o.Name == name);
+            if (image != null)
+            {
+                var ret = new ImageModel()
+                {
+                    AmiId = image.ImageId,
+                    Name = image.Name
+                };
+                return ret;
+            }
+            else
+                return null;
+        }
         /************************************************* Security Group ************************************************/
         public async Task<string> CreateSecurityGroup(string groupName, string vpcId, string resourceTypeName)
         {
