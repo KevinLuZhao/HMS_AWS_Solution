@@ -1,15 +1,17 @@
 ﻿using System;
+using Hms.AwsConsole.AwsUtilities;
 using Hms.AwsConsole.Interfaces;
 using Hms.AwsConsole.Model;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Hms.AwsConsole.AwsUtilities
+namespace Hms.AwsConsole.BLL
 {
     public class DBLevel1InfraBuilder
     {
         IWindowForm monitorForm;
         Model.Environment environment;
+        string region = "us-east-2";
         EC2Helper ec2Helper;
         DBInfraEntities entities = new DBInfraEntities();
 
@@ -33,56 +35,77 @@ namespace Hms.AwsConsole.AwsUtilities
             monitorForm = frm;
             environment = env;
             entities.Environment = env.ToString();
-            ec2Helper = new EC2Helper(env.ToString(), frm);
+            ec2Helper = new EC2Helper(env.ToString());
         }
 
         public async Task<DBInfraEntities> Creat()
         {
-            //Create VPC
-            var vpcResponse = await ec2Helper.CreateVpc(STR_VPC, CIDR_VPC);
-            entities.VpcId = vpcResponse;
+            try
+            {
+                //Create VPC
+                var vpcResponse = await ec2Helper.CreateVpc(STR_VPC, CIDR_VPC);
+                entities.VpcId = vpcResponse;
 
-            //Create Subnets
-            //Subnet group has to include at least two subnets, otherwise, CreateDBSubnetGroup 
-            //command will halt there forever
-            var subnetResponseA = await ec2Helper.
-                CreateSubnet(entities.VpcId, STR_DB_SUBNET_A, CIDR_DB_SUBNET_A, "us-east-2a");
-            entities.SubnetAId = subnetResponseA;
-            var subnetResponseB = await ec2Helper.
-                CreateSubnet(entities.VpcId, STR_DB_SUBNET_B, CIDR_DB_SUBNET_B, "us-east-2b");
-            entities.SubnetBId = subnetResponseB;
+                //Create Subnets
+                //Subnet group has to include at least two subnets, otherwise, CreateDBSubnetGroup 
+                //command will halt there forever
+                var subnetResponseA = await ec2Helper.
+                    CreateSubnet(entities.VpcId, STR_DB_SUBNET_A, CIDR_DB_SUBNET_A, "us-east-2a");
+                entities.SubnetAId = subnetResponseA;
+                var subnetResponseB = await ec2Helper.
+                    CreateSubnet(entities.VpcId, STR_DB_SUBNET_B, CIDR_DB_SUBNET_B, "us-east-2b");
+                entities.SubnetBId = subnetResponseB;
 
-            //Create Security Groups
-            var securityGroups = new List<string>();
-            entities.DBSecurityGroupId = await CreatRdsSeurityGroup();
-            securityGroups.Add(entities.DBSecurityGroupId);
+                //Create Security Groups
+                var securityGroups = new List<string>();
+                entities.DBSecurityGroupId = await CreatRdsSeurityGroup();
+                securityGroups.Add(entities.DBSecurityGroupId);
 
-            RDSHelper rdsHelper = new RDSHelper(environment, "us-east-2");
-            //Create DBSubnetGroup
-            var dbSubnetGroupResponse = await rdsHelper.CreateDBSubnetGroup(
-                new List<string>() { entities.SubnetAId, entities.SubnetBId });
-            entities.DBSubnetGoupId = dbSubnetGroupResponse.DBSubnetGroupName;
+                RDSHelper rdsHelper = new RDSHelper(environment, region);
+                //Create DBSubnetGroup
+                var dbSubnetGroupResponse = await rdsHelper.CreateDBSubnetGroup(
+                    new List<string>() { entities.SubnetAId, entities.SubnetBId });
+                entities.DBSubnetGoupId = dbSubnetGroupResponse;
 
-            //Create RDS Instance
-            var responseRdsInstance = await rdsHelper.CreatInstance(dbSubnetGroupResponse, securityGroups);
-            entities.DBInstanceId = responseRdsInstance.DBInstanceIdentifier;
+                //Create RDS Instance
+                var responseRdsInstance = await rdsHelper.CreatInstance(dbSubnetGroupResponse, securityGroups);
+                entities.DBInstanceId = responseRdsInstance;
 
-            return entities;
+                return entities;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                var service = new InfraEntitiesServices();
+                service.SaveDbInfraEntities(entities);
+            }
         }
 
         public async Task<string> Delete(DBInfraEntities entities)
         {
+            var service = new InfraEntitiesServices();
             RDSHelper rdsHelper = new RDSHelper(environment, "us-east-2");
             try
             {
                 await rdsHelper.DeleteRDSInstance(entities.DBInstanceId);
+                entities.DBInstanceId = null;
                 await ec2Helper.DeleteSecurityGoup(entities.DBSecurityGroupId);
+                entities.DBSecurityGroupId = null;
                 await ec2Helper.DeleteSubnet(entities.SubnetAId);
+                entities.DBSubnetGoupId = null;
                 return "Success";
             }
             catch (Exception ex)
             {
+                service.SaveDbInfraEntities(entities);
                 return ex.Message;
+            }
+            finally
+            {
+                service.DeleteDbInfraEntities(environment.ToString());
             }
         }
 

@@ -6,6 +6,9 @@ using Hms.AwsConsole.AwsUtilities;
 using Hms.AwsConsole.Interfaces;
 using Hms.AwsConsole.Model;
 
+/// <summary>
+/// Deprecated
+/// </summary>
 namespace Hms.AwsConsole.BLL
 {
     public class DBInfraBuilder

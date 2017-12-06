@@ -12,7 +12,7 @@ namespace Hms.AwsConsole.BLL
     {
         public List<ImageModel> GetAMIs(string env)
         {
-            EC2Helper helper = new EC2Helper(env.ToString(), null);
+            EC2Helper helper = new EC2Helper(env.ToString());
             return helper.GetImageList();
         }
     }

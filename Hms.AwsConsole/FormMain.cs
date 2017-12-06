@@ -1,16 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Reflection;
 using System.Windows.Forms;
-using Hms.AwsConsole.AwsUtilities;
-using Hms.AwsConsole.Interfaces;
-using Hms.AwsConsole.BLL;
 
 namespace Hms.AwsConsole
 {
@@ -25,7 +15,7 @@ namespace Hms.AwsConsole
 
         private void FormMain_Load(object sender, EventArgs e)
         {           
-            MainStatusStrip = toolStripStatusLabel1;
+            MainStatusStrip = toolStripStatusLabel2;
         }
 
         private void OpenFormMenu_Click(object sender, EventArgs e)

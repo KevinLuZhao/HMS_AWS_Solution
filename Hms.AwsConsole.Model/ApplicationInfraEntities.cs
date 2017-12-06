@@ -19,5 +19,12 @@ namespace Hms.AwsConsole.Model
         public string PublicSecurityGroupId { get; set; }
         public string PrivateSecurityGroupId { get; set; }
         //public string JumpBoxSecurityGroupId { get; set; }
+        //public List<string> Instances { get; set; }
+        public List<string> Instances { get; set; }
+        
+        public ApplicationInfraEntities()
+        {
+            Instances = new List<string>();
+        }
     }
 }

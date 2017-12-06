@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
-    internal class AwsCommon
+    public class AwsCommon
     {
         public static Amazon.RegionEndpoint GetRetionEndpoint(string region)
         {
@@ -25,6 +25,11 @@ namespace Hms.AwsConsole.AwsUtilities
                 default:
                     return Amazon.RegionEndpoint.USEast2;
             }
+        }
+
+        public static string FormatResourceName(string name, string environment)
+        {
+            return $"HMS_{environment}_{name}";
         }
     }
 }

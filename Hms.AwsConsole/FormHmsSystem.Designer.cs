@@ -30,10 +30,13 @@
         {
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.btnDestroyLevel2 = new System.Windows.Forms.Button();
+            this.btnCreateLevel2 = new System.Windows.Forms.Button();
+            this.btnDestroyLevel1 = new System.Windows.Forms.Button();
             this.ddlWebServerAMI = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.cboxLevel2 = new System.Windows.Forms.CheckBox();
-            this.btnCreate = new System.Windows.Forms.Button();
+            this.btnCreateLevel1 = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.cboxLevel1 = new System.Windows.Forms.CheckBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -59,6 +62,7 @@
             this.toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
             this.tsComboColor = new System.Windows.Forms.ToolStripComboBox();
             this.btnCreateVpcConnection = new System.Windows.Forms.Button();
+            this.btnDestroyRDS = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -80,10 +84,13 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.btnDestroyLevel2);
+            this.tabPage1.Controls.Add(this.btnCreateLevel2);
+            this.tabPage1.Controls.Add(this.btnDestroyLevel1);
             this.tabPage1.Controls.Add(this.ddlWebServerAMI);
             this.tabPage1.Controls.Add(this.label2);
             this.tabPage1.Controls.Add(this.cboxLevel2);
-            this.tabPage1.Controls.Add(this.btnCreate);
+            this.tabPage1.Controls.Add(this.btnCreateLevel1);
             this.tabPage1.Controls.Add(this.label1);
             this.tabPage1.Controls.Add(this.cboxLevel1);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
@@ -93,6 +100,36 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Application Infrastructure";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // btnDestroyLevel2
+            // 
+            this.btnDestroyLevel2.Location = new System.Drawing.Point(128, 155);
+            this.btnDestroyLevel2.Name = "btnDestroyLevel2";
+            this.btnDestroyLevel2.Size = new System.Drawing.Size(75, 23);
+            this.btnDestroyLevel2.TabIndex = 8;
+            this.btnDestroyLevel2.Text = "Destroy";
+            this.btnDestroyLevel2.UseVisualStyleBackColor = true;
+            this.btnDestroyLevel2.Click += new System.EventHandler(this.btnDestroyLevel2_Click);
+            // 
+            // btnCreateLevel2
+            // 
+            this.btnCreateLevel2.Location = new System.Drawing.Point(41, 155);
+            this.btnCreateLevel2.Name = "btnCreateLevel2";
+            this.btnCreateLevel2.Size = new System.Drawing.Size(75, 23);
+            this.btnCreateLevel2.TabIndex = 7;
+            this.btnCreateLevel2.Text = "Create";
+            this.btnCreateLevel2.UseVisualStyleBackColor = true;
+            this.btnCreateLevel2.Click += new System.EventHandler(this.btnCreateLevel2_Click);
+            // 
+            // btnDestroyLevel1
+            // 
+            this.btnDestroyLevel1.Location = new System.Drawing.Point(123, 58);
+            this.btnDestroyLevel1.Name = "btnDestroyLevel1";
+            this.btnDestroyLevel1.Size = new System.Drawing.Size(75, 23);
+            this.btnDestroyLevel1.TabIndex = 6;
+            this.btnDestroyLevel1.Text = "Destroy";
+            this.btnDestroyLevel1.UseVisualStyleBackColor = true;
+            this.btnDestroyLevel1.Click += new System.EventHandler(this.btnDestroyLevel1_Click);
             // 
             // ddlWebServerAMI
             // 
@@ -122,14 +159,15 @@
             this.cboxLevel2.Text = "Level 2";
             this.cboxLevel2.UseVisualStyleBackColor = true;
             // 
-            // btnCreate
+            // btnCreateLevel1
             // 
-            this.btnCreate.Location = new System.Drawing.Point(36, 185);
-            this.btnCreate.Name = "btnCreate";
-            this.btnCreate.Size = new System.Drawing.Size(75, 23);
-            this.btnCreate.TabIndex = 2;
-            this.btnCreate.Text = "Create";
-            this.btnCreate.UseVisualStyleBackColor = true;
+            this.btnCreateLevel1.Location = new System.Drawing.Point(36, 58);
+            this.btnCreateLevel1.Name = "btnCreateLevel1";
+            this.btnCreateLevel1.Size = new System.Drawing.Size(75, 23);
+            this.btnCreateLevel1.TabIndex = 2;
+            this.btnCreateLevel1.Text = "Create";
+            this.btnCreateLevel1.UseVisualStyleBackColor = true;
+            this.btnCreateLevel1.Click += new System.EventHandler(this.btnCreateLevel1_Click);
             // 
             // label1
             // 
@@ -153,6 +191,7 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.btnDestroyRDS);
             this.tabPage2.Controls.Add(this.panel1);
             this.tabPage2.Controls.Add(this.label3);
             this.tabPage2.Controls.Add(this.lblInfraInfo);
@@ -269,6 +308,7 @@
             this.btnCreateRDS.TabIndex = 0;
             this.btnCreateRDS.Text = "Create Database Infra";
             this.btnCreateRDS.UseVisualStyleBackColor = true;
+            this.btnCreateRDS.Click += new System.EventHandler(this.btnCreateRDS_Click);
             // 
             // txtMonitor
             // 
@@ -352,6 +392,16 @@
             this.btnCreateVpcConnection.UseVisualStyleBackColor = true;
             this.btnCreateVpcConnection.Click += new System.EventHandler(this.btnCreateVpcConnection_Click);
             // 
+            // btnDestroyRDS
+            // 
+            this.btnDestroyRDS.Location = new System.Drawing.Point(155, 184);
+            this.btnDestroyRDS.Name = "btnDestroyRDS";
+            this.btnDestroyRDS.Size = new System.Drawing.Size(119, 23);
+            this.btnDestroyRDS.TabIndex = 6;
+            this.btnDestroyRDS.Text = "Destroy Database Infra";
+            this.btnDestroyRDS.UseVisualStyleBackColor = true;
+            this.btnDestroyRDS.Click += new System.EventHandler(this.btnDestroyRDS_Click);
+            // 
             // FormHmsSystem
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -395,7 +445,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripLabel toolStripLabel3;
         private System.Windows.Forms.ToolStripComboBox tsComboColor;
-        private System.Windows.Forms.Button btnCreate;
+        private System.Windows.Forms.Button btnCreateLevel1;
         private System.Windows.Forms.CheckBox cboxLevel2;
         private System.Windows.Forms.ComboBox ddlWebServerAMI;
         private System.Windows.Forms.Label label2;
@@ -411,5 +461,9 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label lblDbInstanceId;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button btnDestroyLevel2;
+        private System.Windows.Forms.Button btnCreateLevel2;
+        private System.Windows.Forms.Button btnDestroyLevel1;
+        private System.Windows.Forms.Button btnDestroyRDS;
     }
 }

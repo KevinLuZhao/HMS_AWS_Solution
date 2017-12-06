@@ -1,4 +1,5 @@
 ﻿using Hms.AwsConsole.BLL;
+using Hms.AwsConsole.AwsUtilities;
 using Hms.AwsConsole.Interfaces;
 using Hms.AwsConsole.Model;
 using System;
@@ -42,16 +43,6 @@ namespace Hms.AwsConsole
         {
             try
             {
-                ApplicationsInfraBuilder applicationBuilder = new ApplicationsInfraBuilder();
-                btnCreate.Click += new EventHandler(
-                    async (s, arg) => await applicationBuilder.CreateNewInfrastructure
-                    (1, GlobalVariables.Enviroment.ToString(), this));
-
-                DBInfraBuilder dbBuilder = new DBInfraBuilder();
-                btnCreateRDS.Click += new EventHandler(
-                    async (s, arg) => await dbBuilder.CreateNewInfrastructure
-                    (GlobalVariables.Enviroment.ToString(), this));
-
                 tsComboEnv.ComboBox.DataSource = Enum.GetValues(typeof(Model.Environment));
                 //tsComboEnv.SelectedIndex = 1;
                 //tsComboColor.ComboBox.DataSource = Enum.GetValues(typeof(Model.Color));
@@ -70,20 +61,170 @@ namespace Hms.AwsConsole
                 ddlWebServerAMI.DisplayMember = "Name";
                 ddlWebServerAMI.ValueMember = "AmiId";
 
-                LoadApplicationStatus();
-                LoadDbStatus();
+                PopulateData();
             }
             catch (Exception ex)
             {
-                LogServices.WriteLog(ex.Message + " Stack trace: " + ex.StackTrace, 
-                    LogType.Error, tsComboEnv.SelectedItem.ToString());
+                HandleException(ex);
             }
+        }
+
+        private async void btnCreateLevel1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (isLevel1ApplicationInfraExisting())
+                {
+                    MessageBox.Show("Application Infrascture Level 1 is existing. If you want to create a new one, please delete the exising one first");
+                    return;
+                }
+                var builder = new ApplicationsLevel1Builder(GlobalVariables.Enviroment.ToString(), this);
+                NotifyToMainStatus("Creating Application Infrascture Level 1 bigin.", System.Drawing.Color.Green);
+                var response = await builder.Creat();
+                WriteNotification("Application Infrascture Level 1 is created");
+                PopulateData();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
+        private async void btnDestroyLevel1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!isLevel1ApplicationInfraExisting())
+                {
+                    MessageBox.Show("Delete failed. Application Infrascture Level 1 is not existing.");
+                    return;
+                }
+                if (isLevel2ApplicationInfraExisting())
+                {
+                    MessageBox.Show("Delete failed. Please delete Application Infrascture Level 2 first.");
+                    return;
+                }
+                var builder = new ApplicationsLevel1Builder(GlobalVariables.Enviroment.ToString(), this);
+                NotifyToMainStatus("Deleting Application Infrascture Level 1 begin.", System.Drawing.Color.Green);
+                await builder.Destroy(appEntities);
+                WriteNotification("Application Infrascture Level 1 is deleted");
+                PopulateData();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
+        private async void btnCreateLevel2_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!isLevel1ApplicationInfraExisting())
+                {
+                    MessageBox.Show("Please create Application Infrascture Level 1 first.");
+                    return;
+                }
+                if (isLevel2ApplicationInfraExisting())
+                {
+                    MessageBox.Show("Application Infrastructure Level 2 is existing. If you want to create a new one, please delete the exising one first");
+                    return;
+                }
+                var builder = new ApplicationsLevel2Builder(appEntities, GlobalVariables.Enviroment.ToString(), this);
+                NotifyToMainStatus("Creating Application Infrastructure Level 2 bigin.", System.Drawing.Color.Green);
+                var response = await builder.Creat();
+                WriteNotification("Application Infrastructure Level 2 is created");
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
+        private async void btnDestroyLevel2_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!isLevel2ApplicationInfraExisting())
+                {
+                    MessageBox.Show("Delete failed. Application Infrastructure Level 2 is not existing.");
+                    return;
+                }
+                var builder = new ApplicationsLevel2Builder(appEntities, GlobalVariables.Enviroment.ToString(), this);
+                NotifyToMainStatus("Deleting Application Infrastructure Level 1 bigin.", System.Drawing.Color.Green);
+                await builder.Destroy(appEntities);
+                WriteNotification("Application Infrastructure Level 1 is deleted");
+                PopulateData();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
+        private async void btnCreateRDS_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (dbEntities != null)
+                {
+                    MessageBox.Show("RDS Infrastructure is existing. If you want to create a new one, please delete the exising one first");
+                    return;
+                }
+                var builder = new DBLevel1InfraBuilder(GlobalVariables.Enviroment, this);
+                NotifyToMainStatus("Creating RDS Infrastructure bigin.", System.Drawing.Color.Green);
+                var response = await builder.Creat();
+                WriteNotification("RDS Infrastructure is created");
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
+        private async void btnDestroyRDS_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (dbEntities == null)
+                {
+                    MessageBox.Show("Delete failed. There is no RDS Infrastructure to destroy.");
+                    return;
+                }
+                var builder = new DBLevel1InfraBuilder(GlobalVariables.Enviroment, this);
+                NotifyToMainStatus("Creating RDS Infrastructure bigin.", System.Drawing.Color.Green);
+                var response = await builder.Delete(dbEntities);
+                WriteNotification("RDS Infrastructure is created");
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
+        private async void btnCreateVpcConnection_Click(object sender, EventArgs e)
+        {
+            var service = new VpcPeeringConnectionServices();
+            var lstVpcs = await service.GetAvailablePeeringVpcList();
+            await service.CreatePeeringConnection(
+                lstVpcs.Find(o => o.VpcId == dbEntities.VpcId), 
+                lstVpcs.Find(o => o.VpcId == appEntities.VpcId), 
+                tsComboEnv.SelectedItem.ToString());
+        }
+
+        private void PopulateData()
+        {
+            var services = new InfraEntitiesServices();
+            appEntities = services.GetApplicationInfraEntities(tsComboEnv.SelectedItem.ToString());
+
+            dbEntities = services.GetDbInfraEntities(tsComboEnv.SelectedItem.ToString());
+            LoadApplicationStatus();
+            LoadDbStatus();
         }
 
         private void LoadApplicationStatus()
         {
-            var services = new InfraEntitiesServices();
-            appEntities = services.GetApplicationInfraEntities(tsComboEnv.SelectedItem.ToString());
+            
             if (appEntities != null)
             {
                 label1.Text = $"VPC: {appEntities.VpcId}, Public Subnet: {appEntities.PublicSubnetId}, Private Subnet: {appEntities.PrivateSubnetId} were created";
@@ -96,15 +237,13 @@ namespace Hms.AwsConsole
 
         private void LoadDbStatus()
         {
-            var services = new InfraEntitiesServices();
-            dbEntities = services.GetDbInfraEntities(tsComboEnv.SelectedItem.ToString());
             if (dbEntities != null)
             {
                 lblInfraInfo.Text = $"VPC: {dbEntities.VpcId}, Subnet Group: {dbEntities.DBSubnetGoupId}, Instance: {dbEntities.DBInstanceId} were created";
             }
             else
             {
-                lblInfraInfo.Text = "RDS infrastructure is not created";
+                lblInfraInfo.Text = "RDS Infrastructure is not created";
             }
             var instanceServices = new DBInstanceServices(tsComboEnv.SelectedItem.ToString(), tsComboRegion.SelectedItem.ToString());
             var instance = instanceServices.GetDBInstance();
@@ -122,10 +261,29 @@ namespace Hms.AwsConsole
             }
         }
 
-        private void btnCreateVpcConnection_Click(object sender, EventArgs e)
+        private bool isLevel1ApplicationInfraExisting()
         {
-            var service = new VpcConnectionServices();
-            service.CreateVpcPeeringConnection(dbEntities.VpcId, appEntities.VpcId, tsComboEnv.SelectedItem.ToString(), this);
+            return appEntities != null;
+        }
+
+        private bool isLevel2ApplicationInfraExisting()
+        {
+            if (!isLevel1ApplicationInfraExisting())
+                return false;
+            if (appEntities.Instances == null || appEntities.Instances.Count == 0)
+                return false;
+            else
+                return true;
+        }
+
+        private bool isRdsInfraExisting()
+        {
+            return dbEntities != null;
+        }
+
+        private void SetButtons()
+        {
+
         }
     }
 }

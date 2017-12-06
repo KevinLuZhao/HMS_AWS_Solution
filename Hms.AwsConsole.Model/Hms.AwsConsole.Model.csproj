@@ -42,7 +42,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AwsAppInstanceInfo.cs" />
+    <Compile Include="AwsPeeringConnection.cs" />
     <Compile Include="AwsRdsInstance.cs" />
+    <Compile Include="AwsResourceTypeName.cs" />
+    <Compile Include="AwsVpc.cs" />
     <Compile Include="DBInfraEntities.cs" />
     <Compile Include="Environment.cs" />
     <Compile Include="GlobalVariables.cs" />

@@ -5,6 +5,7 @@ using Amazon.Runtime;
 using Amazon.Runtime.CredentialManagement;
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,13 +36,35 @@ namespace Hms.AwsConsole.AwsUtilities
         {
             Table table = Table.LoadTable(client, tableName);
             var dicTable = new Dictionary<string, AttributeValue>();
+            Type type = typeof(T);
             foreach (var prop in tableInstance.GetType().GetProperties())
             {
                 DynamoDBEntry entry = new Primitive
                 {
                     Value = prop.GetValue(tableInstance, null)
                 };
-                dicTable.Add(prop.Name, new AttributeValue(prop.GetValue(tableInstance).ToString()));
+                //dicTable.Add(prop.Name, new AttributeValue(prop.GetValue(tableInstance)));
+                switch (prop.PropertyType.Name)
+                {
+                    case "String":
+                        dicTable.Add(prop.Name, new AttributeValue(prop.GetValue(tableInstance).ToString()));
+                        break;
+                    //case "Int32":
+                    //    prop.SetValue(obj, int.Parse(tableItem[prop.Name].S));
+                    //    break;
+                    //case "Enum":
+                    //    prop.SetValue(obj, Enum.Parse(prop.PropertyType, tableItem[prop.Name].S));
+                    //    break;
+                    //case "DateTime":
+                    //    prop.SetValue(obj, DateTime.Parse(tableItem[prop.Name].S));
+                    //    break;
+                    case "List`1":
+                        dicTable.Add(prop.Name, new AttributeValue((List<string>)prop.GetValue(tableInstance)));
+                        break;
+                    default:
+                        dicTable.Add(prop.Name, new AttributeValue(prop.GetValue(tableInstance).ToString()));
+                        break;
+                }
             }
             //var doc = new Document(dicTable);
             var request = new PutItemRequest(tableName, dicTable);
@@ -147,28 +170,36 @@ namespace Hms.AwsConsole.AwsUtilities
             {
                 try
                 {
-                    string propertyType;
-                    if (prop.PropertyType.BaseType.FullName == "System.Enum")
+                    //For the case that instance has a property but table doesn't have yet.
+                    if (!tableItem.ContainsKey(prop.Name))
                     {
-                        propertyType = "System.Enum";
+                        continue;
+                    }
+                    string propertyType;
+                    if (prop.PropertyType.BaseType.Name == "Enum")
+                    {
+                        propertyType = "Enum";
                     }
                     else
                     {
-                        propertyType = prop.PropertyType.FullName;
+                        propertyType = prop.PropertyType.Name;
                     }
                     switch (propertyType)
                     {
-                        case "System.String":
+                        case "String":
                             prop.SetValue(obj, tableItem[prop.Name].S);
                             break;
-                        case "System.Int32":
+                        case "Int32":
                             prop.SetValue(obj, int.Parse(tableItem[prop.Name].S));
                             break;
-                        case "System.Enum":
+                        case "Enum":
                             prop.SetValue(obj, Enum.Parse(prop.PropertyType, tableItem[prop.Name].S));
                             break;
-                        case "System.DateTime":
+                        case "DateTime":
                             prop.SetValue(obj, DateTime.Parse(tableItem[prop.Name].S));
+                            break;
+                        case "List`1":
+                            prop.SetValue(obj, tableItem[prop.Name].SS);
                             break;
                         default:
                             prop.SetValue(obj, tableItem[prop.Name].S);

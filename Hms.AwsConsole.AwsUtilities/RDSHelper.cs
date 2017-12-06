@@ -102,7 +102,7 @@ namespace Hms.AwsConsole.AwsUtilities
             var response = await client.ModifyDBInstanceAsync(request);
         }
 
-        public async Task<DBInstance> CreatInstance(DBSubnetGroup dbSubnetGroup, List<string> securityGroups)
+        public async Task<string> CreatInstance(string dbSubnetGroupName, List<string> securityGroups)
         {
             var request = new CreateDBInstanceRequest()
             {
@@ -112,7 +112,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 Engine = "sqlserver-ex",
                 MasterUsername = "sa",
                 MasterUserPassword = "Password123",
-                DBSubnetGroupName = dbSubnetGroup.DBSubnetGroupName,
+                DBSubnetGroupName = dbSubnetGroupName,
                 MultiAZ = false,
                 LicenseModel = "license-included",
                 AllocatedStorage = 200,
@@ -125,7 +125,7 @@ namespace Hms.AwsConsole.AwsUtilities
             try
             {
                 var response = await client.CreateDBInstanceAsync(request);
-                return response.DBInstance;
+                return response.DBInstance.DBInstanceIdentifier;
             }
             catch (Exception ex)
             {
@@ -194,7 +194,7 @@ For supported combinations of instance class and database engine version, see th
             }
         }
 
-        public async Task<DBSubnetGroup> CreateDBSubnetGroup(List<string> subnetIds)
+        public async Task<string> CreateDBSubnetGroup(List<string> subnetIds)
         {
             var request = new CreateDBSubnetGroupRequest()
             {
@@ -207,7 +207,7 @@ For supported combinations of instance class and database engine version, see th
             try
             {
                 var response = await client.CreateDBSubnetGroupAsync(request);
-                return response.DBSubnetGroup;
+                return response.DBSubnetGroup.DBSubnetGroupName;
             }
             catch (Exception ex)
             {
