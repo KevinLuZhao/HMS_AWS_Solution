@@ -156,7 +156,7 @@ namespace Hms.AwsConsole
                 NotifyToMainStatus("Deleting Application Infrastructure Level 1 begin.", System.Drawing.Color.Green);
                 await builder.Destroy(appEntities);
                 WriteNotification("Application Infrastructure Level 1 is deleted");
-                PopulateData();
+                await PopulateData();
             }
             catch (Exception ex)
             {
@@ -214,7 +214,7 @@ namespace Hms.AwsConsole
                 tsComboEnv.SelectedItem.ToString());
         }
 
-        private void PopulateData()
+        private async Task PopulateData()
         {
             var services = new InfraEntitiesServices();
             appEntities = services.GetApplicationInfraEntities(tsComboEnv.SelectedItem.ToString());
@@ -222,6 +222,7 @@ namespace Hms.AwsConsole
             dbEntities = services.GetDbInfraEntities(tsComboEnv.SelectedItem.ToString());
             LoadApplicationInfraStatus();
             LoadDbStatus();
+            await LoadApplicationInstances();
         }
 
         private void LoadApplicationInfraStatus()
@@ -265,32 +266,39 @@ namespace Hms.AwsConsole
 
         private async Task LoadApplicationInstances()
         {
-            if (appEntities != null && appEntities.Instances != null && appEntities.Instances.Count > 0)
+            try
             {
-                var builder = new ApplicationsLevel2Builder(appEntities, GlobalVariables.Enviroment.ToString(), this);
-                while (true)
+                if (appEntities != null && appEntities.Instances != null && appEntities.Instances.Count > 0)
                 {
-                    pnlApplicationInstances.Controls.Clear();
-                    var instances = await builder.GetAllAppInstances(appEntities);
-                    int counter = 0;
-                    foreach (var instance in instances)
+                    var builder = new ApplicationsLevel2Builder(appEntities, GlobalVariables.Enviroment.ToString(), this);
+                    while (true)
                     {
-                        var ctrlControl = new Ctrl_ApplicationInstance();
-                        ctrlControl.Location = new System.Drawing.Point( 10 + 200 * counter, 10);
-                        ctrlControl.UpdateUI(instance);
-                        pnlApplicationInstances.Controls.Add(ctrlControl);
-                    }
-                    if (instances.FindIndex(o=>o.state != "available")>=0)
-                    {
-                        await Task.Delay(30000);
-                        continue;
-                    }
-                    else
-                    {
-                        break;
+                        pnlApplicationInstances.Controls.Clear();
+                        var instances = await builder.GetAllAppInstances(appEntities);
+                        int counter = 0;
+                        foreach (var instance in instances)
+                        {
+                            var ctrlControl = new Ctrl_ApplicationInstance();
+                            ctrlControl.Location = new System.Drawing.Point(10 + 200 * counter, 10);
+                            ctrlControl.UpdateUI(instance);
+                            pnlApplicationInstances.Controls.Add(ctrlControl);
+                        }
+                        if (instances.FindIndex(o => o.state != "available") >= 0)
+                        {
+                            await Task.Delay(30000);
+                            continue;
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }           
         }
 
         private bool isLevel1ApplicationInfraExisting()
