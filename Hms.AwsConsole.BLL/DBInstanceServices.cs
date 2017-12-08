@@ -23,7 +23,10 @@ namespace Hms.AwsConsole.BLL
         public AwsRdsInstance GetDBInstance()
         {
             var db = new GeneralDb<DBInfraEntities>("hms_db_infra_entities");
-            string instanceIdentifier = db.GetItem(environment).DBInstanceId;
+            var dbEntities = db.GetItem(environment);
+            if (dbEntities == null)
+                return null;
+            string instanceIdentifier = dbEntities.DBInstanceId;
             return helper.FindRDSInstance(instanceIdentifier);
         }
     }

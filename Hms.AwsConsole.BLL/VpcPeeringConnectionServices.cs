@@ -23,7 +23,7 @@ namespace Hms.AwsConsole.BLL
             var peeringConnectionId = await ec2Helper.CreatePeeringConnection(
                 requesterVpc.VpcId, accepterVpc.VpcId,
                 AwsCommon.FormatResourceName(AwsResourceTypeName.RdsPeeringConnection, environment));
-            System.Threading.Thread.Sleep(5000);
+            await Task.Delay(5000);
             await ec2Helper.AcceptPeeringConnection(peeringConnectionId);
             await AddPeeringConnectionToRouteTables(requesterVpc, accepterVpc, peeringConnectionId);
             return peeringConnectionId;

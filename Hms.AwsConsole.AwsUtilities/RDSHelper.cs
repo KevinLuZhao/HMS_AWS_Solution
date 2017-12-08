@@ -70,7 +70,7 @@ namespace Hms.AwsConsole.AwsUtilities
                     isMultiAZ = response.DBInstance.MultiAZ;
                     while (isMultiAZ)
                     {
-                        System.Threading.Thread.Sleep(30000);
+                        await Task.Delay(30000);
                         isMultiAZ = GetRDSInstance().MultiAZ;
                     }
                 }

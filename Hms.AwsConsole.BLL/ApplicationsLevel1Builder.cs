@@ -87,11 +87,14 @@ namespace Hms.AwsConsole.BLL
                 entities.PrivateRouteTableId = responsePrivateRouteTable;
                 ShowCreatedMessage(entities.PrivateRouteTableId, STR_PRIVATE_ROUTETABLE);
 
+                entities.Instances = null;
                 return entities;
             }
             catch (Exception ex)
             {
-                throw ex;
+                LogServices.WriteLog(ex.Message + " Stack Trace: " + ex.StackTrace, Model.LogType.Error, GlobalVariables.Enviroment.ToString());
+                return entities;
+                //throw ex;
             }
             finally
             {
@@ -102,7 +105,7 @@ namespace Hms.AwsConsole.BLL
 
         private void ShowCreatedMessage(string resourceId, string resourceTypeName)
         {
-            monitorForm.ShowCallbackMessage($"Resource {resourceId} is created, resource type: {STR_PUBLIC_SUBNET}");
+            monitorForm.ShowCallbackMessage($"Resource {resourceId} is created, resource type: {resourceTypeName}");
         }
 
         public async Task Destroy(ApplicationInfraEntities entities)
@@ -255,7 +258,7 @@ namespace Hms.AwsConsole.BLL
 
         private async Task<string> CreatePrivateSecurityGroup()
         {
-            var sgId = await ec2Helper.CreateSecurityGroup(STR_PUBLIC_SECURITYGROUP, entities.VpcId, STR_PUBLIC_SECURITYGROUP);
+            var sgId = await ec2Helper.CreateSecurityGroup(STR_PRIVATE_SECURITYGROUP, entities.VpcId, STR_PRIVATE_SECURITYGROUP);
             var lstRules = new List<SecurityRule>();
             SecurityRule rule = new SecurityRule()
             {

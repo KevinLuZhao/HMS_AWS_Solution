@@ -19,7 +19,7 @@ namespace Hms.AwsConsole.AwsUtilities
 
         public DynamoDBHelper()
         {
-            Amazon.Runtime.AWSCredentials credentials = new Amazon.Runtime.StoredProfileAWSCredentials("safemail");
+            Amazon.Runtime.AWSCredentials credentials = new StoredProfileAWSCredentials("safemail");
             client = new AmazonDynamoDBClient(
                 credentials,
                 AwsCommon.GetRetionEndpoint("us-east-2"));
@@ -44,27 +44,31 @@ namespace Hms.AwsConsole.AwsUtilities
                     Value = prop.GetValue(tableInstance, null)
                 };
                 //dicTable.Add(prop.Name, new AttributeValue(prop.GetValue(tableInstance)));
-                switch (prop.PropertyType.Name)
+                var propVal = prop.GetValue(tableInstance);
+                if (propVal != null)
                 {
-                    case "String":
-                        dicTable.Add(prop.Name, new AttributeValue(prop.GetValue(tableInstance).ToString()));
-                        break;
-                    //case "Int32":
-                    //    prop.SetValue(obj, int.Parse(tableItem[prop.Name].S));
-                    //    break;
-                    //case "Enum":
-                    //    prop.SetValue(obj, Enum.Parse(prop.PropertyType, tableItem[prop.Name].S));
-                    //    break;
-                    //case "DateTime":
-                    //    prop.SetValue(obj, DateTime.Parse(tableItem[prop.Name].S));
-                    //    break;
-                    case "List`1":
-                        dicTable.Add(prop.Name, new AttributeValue((List<string>)prop.GetValue(tableInstance)));
-                        break;
-                    default:
-                        dicTable.Add(prop.Name, new AttributeValue(prop.GetValue(tableInstance).ToString()));
-                        break;
-                }
+                    switch (prop.PropertyType.Name)
+                    {
+                        case "String":
+                            dicTable.Add(prop.Name, new AttributeValue(prop.GetValue(tableInstance).ToString()));
+                            break;
+                        //case "Int32":
+                        //    prop.SetValue(obj, int.Parse(tableItem[prop.Name].S));
+                        //    break;
+                        //case "Enum":
+                        //    prop.SetValue(obj, Enum.Parse(prop.PropertyType, tableItem[prop.Name].S));
+                        //    break;
+                        //case "DateTime":
+                        //    prop.SetValue(obj, DateTime.Parse(tableItem[prop.Name].S));
+                        //    break;
+                        case "List`1":
+                            dicTable.Add(prop.Name, new AttributeValue((List<string>)prop.GetValue(tableInstance)));
+                            break;
+                        default:
+                            dicTable.Add(prop.Name, new AttributeValue(prop.GetValue(tableInstance).ToString()));
+                            break;
+                    }
+                }                
             }
             //var doc = new Document(dicTable);
             var request = new PutItemRequest(tableName, dicTable);

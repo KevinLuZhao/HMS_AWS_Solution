@@ -90,22 +90,31 @@ namespace Hms.AwsConsole.BLL
             RDSHelper rdsHelper = new RDSHelper(environment, "us-east-2");
             try
             {
-                await rdsHelper.DeleteRDSInstance(entities.DBInstanceId);
+                try
+                {
+                    await rdsHelper.DeleteRDSInstance(entities.DBInstanceId);
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message == "DBInstanceNotFound")
+                    {; }
+                    else
+                    {
+                        throw ex;
+                    }
+                }
                 entities.DBInstanceId = null;
                 await ec2Helper.DeleteSecurityGoup(entities.DBSecurityGroupId);
                 entities.DBSecurityGroupId = null;
                 await ec2Helper.DeleteSubnet(entities.SubnetAId);
                 entities.DBSubnetGoupId = null;
+                service.DeleteDbInfraEntities(environment.ToString());
                 return "Success";
             }
             catch (Exception ex)
             {
                 service.SaveDbInfraEntities(entities);
                 return ex.Message;
-            }
-            finally
-            {
-                service.DeleteDbInfraEntities(environment.ToString());
             }
         }
 

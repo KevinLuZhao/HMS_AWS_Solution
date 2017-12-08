@@ -201,6 +201,16 @@ namespace Hms.AwsConsole.AwsUtilities
                 AllocationId = allocationId
             };
             var response = await client.CreateNatGatewayAsync(request);
+            //bool createFinished = false;
+            while (true)
+            {
+                await Task.Delay(10000);
+                var natGateway = FindNatGatewayById(response.NatGateway.NatGatewayId);
+                if (natGateway.State == NatGatewayState.Available)
+                {
+                    break;
+                }
+            }
             AssignNameToResource(response.NatGateway.NatGatewayId, resourceTypeName);
 
             return response.NatGateway.NatGatewayId;
@@ -250,7 +260,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 await client.DeleteNatGatewayAsync(request);
                 while (ngw.State != NatGatewayState.Deleted)
                 {
-                    System.Threading.Thread.Sleep(30000);
+                    await Task.Delay(10000);
                     ngw = FindNatGateway(ngwId);
                     if (ngw != null)
                     {
@@ -327,16 +337,22 @@ namespace Hms.AwsConsole.AwsUtilities
                 var response = client.DescribeRouteTables(request);
                 if (response.RouteTables != null && response.RouteTables.Count > 0)
                 {
-                    return response.RouteTables[0];
-                }
+                    return response.RouteTables[0];}
                 else
                 {
                     return null;
                 }
             }
+            catch (Amazon.Runtime.AmazonServiceException ex)
+            {
+                if (ex.ErrorCode == "InvalidRouteTableID.NotFound")
+                    return null;
+                else
+                    throw ex;
+            }
             catch (Exception ex)
             {
-                return null;
+                throw ex;
             }
         }
 
@@ -395,10 +411,11 @@ namespace Hms.AwsConsole.AwsUtilities
             }
         }
         /************************************************* Instance ************************************************/
-        public async Task<string> LaunchSingleInstance(
+        public async Task<AwsAppInstance> LaunchSingleInstance(
             string resourceTypeName, string subnetId, string amiId, string keyPairName, List<string> mySGIds,
             string instanceType, string userData = "", string privateIp = null)
         {
+            AwsAppInstance awsInstance = null;
             //List<string> groups = new List<string>() { mySG.GroupId };
             var eni = new InstanceNetworkInterfaceSpecification()
             {
@@ -428,32 +445,22 @@ namespace Hms.AwsConsole.AwsUtilities
             };
 
             var response = await client.RunInstancesAsync(launchRequest);
-            if (response.Reservation.Instances.Count == 1)
+            if (response.Reservation.Instances.Count > 0)
             {
-                AssignNameToResource(response.Reservation.Instances[0].InstanceId, resourceTypeName);
-            }
-            else
-            {
-                int counter = 0;
-                foreach (var instance in response.Reservation.Instances)
+                var instance = response.Reservation.Instances[0];
+                AssignNameToResource(instance.InstanceId, resourceTypeName);
+                DynamoDBHelper<AwsAppInstance> dynamoDbHelper = new DynamoDBHelper<AwsAppInstance>();
+                awsInstance = new AwsAppInstance()
                 {
-                    AssignNameToResource(instance.InstanceId, resourceTypeName + counter.ToString());
-
-                    DynamoDBHelper<AwsAppInstance> dynamoDbHelper = new DynamoDBHelper<AwsAppInstance>();
-                    var awsInstance = new AwsAppInstance()
-                    {
-                        Environment = environment,
-                        InstanceId = instance.InstanceId,
-                        Name = resourceTypeName + counter.ToString(),
-                        PublicIP = instance.PublicIpAddress,
-                        PrivateIP = instance.PrivateIpAddress
-                    };
-                    dynamoDbHelper.CreateItem("hms_instances", awsInstance);
-                    counter++;
-                }
+                    Environment = environment,
+                    InstanceId = instance.InstanceId,
+                    Name = resourceTypeName,
+                    PublicIP = instance.PublicIpAddress,
+                    PrivateIP = instance.PrivateIpAddress
+                };
+                dynamoDbHelper.CreateItem("hms_instances", awsInstance);
             }
-
-            return response.Reservation.Instances[0].InstanceId;
+            return awsInstance;
         }
 
         //Consider to return InstanceId instead of Instance
@@ -492,7 +499,18 @@ namespace Hms.AwsConsole.AwsUtilities
             var response = await client.RunInstancesAsync(launchRequest);
             if (response.Reservation.Instances.Count == 1)
             {
+                var instance = response.Reservation.Instances[0];
                 AssignNameToResource(response.Reservation.Instances[0].InstanceId, resourceTypeName);
+                DynamoDBHelper<AwsAppInstance> dynamoDbHelper = new DynamoDBHelper<AwsAppInstance>();
+                var awsInstance = new AwsAppInstance()
+                {
+                    Environment = environment,
+                    InstanceId = instance.InstanceId,
+                    Name = resourceTypeName,
+                    PublicIP = instance.PublicIpAddress,
+                    PrivateIP = instance.PrivateIpAddress
+                };
+                dynamoDbHelper.CreateItem("hms_instances", awsInstance);
             }
             else
             {
@@ -518,6 +536,44 @@ namespace Hms.AwsConsole.AwsUtilities
             return response.Reservation.Instances;
         }
 
+        public async Task<List<AwsAppInstance>> GetInstancesListByNames(List<string> instanceNames)
+        {
+            var ret = new List<AwsAppInstance>();
+            var request = new DescribeInstancesRequest();
+            var response = await client.DescribeInstancesAsync(request);
+            foreach (var reservation in response.Reservations)
+            {
+                foreach (var instance in reservation.Instances)
+                {
+                    if (instance.Tags.Find(o => o.Key == "Name") == null)
+                        continue;
+                    var instanceName = instance.Tags.Find(o => o.Key == "Name").Value;
+                    if (!instanceNames.Contains(instanceName))
+                        continue;
+                    ret.Add(TranslateInstance(instance, instance.Tags.Find(o=>o.Key=="Name").Value));
+                }
+            }
+            return ret;
+        }
+
+        public async Task<List<AwsAppInstance>> GetInstancesListByIds(List<string> instanceIds)
+        {
+            var ret = new List<AwsAppInstance>();
+            var request = new DescribeInstancesRequest()
+            {
+                InstanceIds = instanceIds
+            };
+            var response = await client.DescribeInstancesAsync(request);
+            foreach (var reservation in response.Reservations)
+            {
+                foreach (var instance in reservation.Instances)
+                {
+                    ret.Add(TranslateInstance(instance, instance.Tags.Find(o => o.Key == "Name").Value));
+                }
+            }
+            return ret;
+        }
+
         public async Task<string> DeleteInstances(List<string> lstInstanceIds)
         {
 
@@ -529,7 +585,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 //Need to find all instances and check status.
                 while (!allTerminated)
                 {
-                    System.Threading.Thread.Sleep(30000);
+                    await Task.Delay(30000);
                     allTerminated = true;
                     foreach (var instance in response.TerminatingInstances)
                     {
@@ -546,6 +602,19 @@ namespace Hms.AwsConsole.AwsUtilities
             {
                 return $"Faied to delete EC2 instances {string.Join(", ", lstInstanceIds.ToArray())} . Error message: {ex.Message}";
             }
+        }
+
+        private AwsAppInstance TranslateInstance(Instance instance, string name)
+        {
+            return new AwsAppInstance()
+            {
+                Environment = environment,
+                InstanceId = instance.InstanceId,
+                Name = name,
+                PublicIP = instance.PublicIpAddress,
+                PrivateIP = instance.PrivateIpAddress,
+                state = instance.StateReason.Code
+            };
         }
 
         public List<ImageModel> GetImageList()
@@ -621,11 +690,14 @@ namespace Hms.AwsConsole.AwsUtilities
         public void DisassociateRouteTableToSubnet(string routeTableId, string subnetId)
         {
             var routeTable = FindRouteTableByID(routeTableId);
-            var request = new DisassociateRouteTableRequest()
+            if (routeTable != null)
             {
-                AssociationId = routeTable.Associations.Find(o => o.SubnetId == subnetId).RouteTableAssociationId
-            };
-            client.DisassociateRouteTable(request);
+                var request = new DisassociateRouteTableRequest()
+                {
+                    AssociationId = routeTable.Associations.Find(o => o.SubnetId == subnetId).RouteTableAssociationId
+                };
+                client.DisassociateRouteTable(request);
+            }
         }
 
         public void DisassociateAddress(string ip)

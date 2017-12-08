@@ -32,6 +32,7 @@ namespace Hms.AwsConsole.BLL
             try
             {
                 var response = await LaunchJumpbox();
+                entities.Instances = new List<string>();
                 entities.Instances.Clear();
                 entities.Instances.Add(response);
                 monitorForm.ShowCallbackMessage($"{STR_JUMPBOX_INSTANCE} is created");
@@ -48,7 +49,10 @@ namespace Hms.AwsConsole.BLL
             }
             catch (Exception ex)
             {
-                throw ex;
+                LogServices.WriteLog(ex.Message + " Stack Trace: " + ex.StackTrace, 
+                    Model.LogType.Error, GlobalVariables.Enviroment.ToString());
+                return entities;
+                //throw ex;
             }
             finally
             {
@@ -68,6 +72,13 @@ namespace Hms.AwsConsole.BLL
             serivce.SaveApplicationInfraEntities(entities);
         }
 
+        public async Task<List<AwsAppInstance>> GetAllAppInstances(ApplicationInfraEntities entities)
+        {
+            if (entities.Instances == null)
+                return null;
+            return await ec2Helper.GetInstancesListByIds(entities.Instances);
+        }
+
         private async Task<string> LaunchJumpbox()
         {
             string str = @"<powershell>
@@ -84,31 +95,31 @@ namespace Hms.AwsConsole.BLL
             string userData = Convert.ToBase64String(encbuff);
             var response = await ec2Helper.LaunchSingleInstance(STR_JUMPBOX_INSTANCE,
                 entities.PublicSubnetId, "ami-5d99b938", "hms_qa_keypair",
-                new List<string> { entities.PublicSecurityGroupId}, "T2Micro", userData);
-            return response;
+                new List<string> { entities.PublicSecurityGroupId}, "T2.Micro", userData);
+            return response.InstanceId;
         }
 
         private async Task<string> LaunchWebServer()
         {
             var response = await ec2Helper.LaunchSingleInstance(STR_WEBSERVER_INSTANCE,
                 entities.PublicSubnetId, "ami-986b42fd", "hms_qa_keypair",
-                new List<string> { entities.PublicSecurityGroupId }, "T2Micro");
-            return response;
+                new List<string> { entities.PublicSecurityGroupId }, "T2.Micro");
+            return response.InstanceId;
         }
 
         private async Task<string> LaunchServicesServer()
         {
             var response = await ec2Helper.LaunchSingleInstance(STR_SERVICES_INSTANCE,
                 entities.PrivateSubnetId, "ami-40684125", "hms_qa_keypair",
-                new List<string> { entities.PrivateSecurityGroupId }, "T2Medium");
-            return response;
+                new List<string> { entities.PrivateSecurityGroupId }, "T2.Medium");
+            return response.InstanceId;
         }
 
         private async Task<string> LaunchEmailFilterServer()
         {
             var response = await ec2Helper.LaunchSingleInstance(STR_EMAILFILTER_INSTANCE,
-                entities.PrivateSubnetId, "ami-9b6b42fe", "hms_qa_keypair", null, "T2Medium");
-            return response;
+                entities.PrivateSubnetId, "ami-9b6b42fe", "hms_qa_keypair", null, "T2.Medium");
+            return response.InstanceId;
         }
 
         //private async Task<Instance> LaunchEmailServiceServer()

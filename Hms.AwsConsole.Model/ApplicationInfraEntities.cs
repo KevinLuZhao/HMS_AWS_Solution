@@ -24,7 +24,7 @@ namespace Hms.AwsConsole.Model
         
         public ApplicationInfraEntities()
         {
-            Instances = new List<string>();
+            //Instances = new List<string>();
         }
     }
 }

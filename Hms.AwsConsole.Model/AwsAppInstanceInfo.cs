@@ -13,5 +13,6 @@ namespace Hms.AwsConsole.Model
         public string InstanceId { get; set; }
         public string PublicIP { get; set; }
         public string PrivateIP { get; set; }
+        public string state { get; set; }
     }
 }

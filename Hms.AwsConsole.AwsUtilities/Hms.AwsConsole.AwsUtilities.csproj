@@ -62,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AwsCommon.cs" />
-    <Compile Include="CommonFuncs.cs" />
     <Compile Include="DynamoDBHelper.cs" />
     <Compile Include="EC2Helper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

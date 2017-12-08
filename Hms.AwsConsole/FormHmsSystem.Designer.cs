@@ -40,6 +40,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.cboxLevel1 = new System.Windows.Forms.CheckBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.btnDestroyRDS = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.lblDbInstanceStatus = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
@@ -62,7 +63,7 @@
             this.toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
             this.tsComboColor = new System.Windows.Forms.ToolStripComboBox();
             this.btnCreateVpcConnection = new System.Windows.Forms.Button();
-            this.btnDestroyRDS = new System.Windows.Forms.Button();
+            this.pnlApplicationInstances = new System.Windows.Forms.Panel();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -84,6 +85,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.pnlApplicationInstances);
             this.tabPage1.Controls.Add(this.btnDestroyLevel2);
             this.tabPage1.Controls.Add(this.btnCreateLevel2);
             this.tabPage1.Controls.Add(this.btnDestroyLevel1);
@@ -103,7 +105,7 @@
             // 
             // btnDestroyLevel2
             // 
-            this.btnDestroyLevel2.Location = new System.Drawing.Point(128, 155);
+            this.btnDestroyLevel2.Location = new System.Drawing.Point(123, 194);
             this.btnDestroyLevel2.Name = "btnDestroyLevel2";
             this.btnDestroyLevel2.Size = new System.Drawing.Size(75, 23);
             this.btnDestroyLevel2.TabIndex = 8;
@@ -113,7 +115,7 @@
             // 
             // btnCreateLevel2
             // 
-            this.btnCreateLevel2.Location = new System.Drawing.Point(41, 155);
+            this.btnCreateLevel2.Location = new System.Drawing.Point(36, 194);
             this.btnCreateLevel2.Name = "btnCreateLevel2";
             this.btnCreateLevel2.Size = new System.Drawing.Size(75, 23);
             this.btnCreateLevel2.TabIndex = 7;
@@ -123,7 +125,7 @@
             // 
             // btnDestroyLevel1
             // 
-            this.btnDestroyLevel1.Location = new System.Drawing.Point(123, 58);
+            this.btnDestroyLevel1.Location = new System.Drawing.Point(123, 30);
             this.btnDestroyLevel1.Name = "btnDestroyLevel1";
             this.btnDestroyLevel1.Size = new System.Drawing.Size(75, 23);
             this.btnDestroyLevel1.TabIndex = 6;
@@ -134,7 +136,7 @@
             // ddlWebServerAMI
             // 
             this.ddlWebServerAMI.FormattingEnabled = true;
-            this.ddlWebServerAMI.Location = new System.Drawing.Point(138, 119);
+            this.ddlWebServerAMI.Location = new System.Drawing.Point(415, 199);
             this.ddlWebServerAMI.Name = "ddlWebServerAMI";
             this.ddlWebServerAMI.Size = new System.Drawing.Size(121, 21);
             this.ddlWebServerAMI.TabIndex = 5;
@@ -142,7 +144,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(36, 119);
+            this.label2.Location = new System.Drawing.Point(313, 199);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(86, 13);
             this.label2.TabIndex = 4;
@@ -152,7 +154,7 @@
             // 
             this.cboxLevel2.AutoSize = true;
             this.cboxLevel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cboxLevel2.Location = new System.Drawing.Point(36, 95);
+            this.cboxLevel2.Location = new System.Drawing.Point(36, 67);
             this.cboxLevel2.Name = "cboxLevel2";
             this.cboxLevel2.Size = new System.Drawing.Size(68, 17);
             this.cboxLevel2.TabIndex = 3;
@@ -161,7 +163,7 @@
             // 
             // btnCreateLevel1
             // 
-            this.btnCreateLevel1.Location = new System.Drawing.Point(36, 58);
+            this.btnCreateLevel1.Location = new System.Drawing.Point(36, 30);
             this.btnCreateLevel1.Name = "btnCreateLevel1";
             this.btnCreateLevel1.Size = new System.Drawing.Size(75, 23);
             this.btnCreateLevel1.TabIndex = 2;
@@ -172,7 +174,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(120, 27);
+            this.label1.Location = new System.Drawing.Point(120, 10);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(351, 13);
             this.label1.TabIndex = 1;
@@ -182,7 +184,7 @@
             // 
             this.cboxLevel1.AutoSize = true;
             this.cboxLevel1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cboxLevel1.Location = new System.Drawing.Point(36, 23);
+            this.cboxLevel1.Location = new System.Drawing.Point(36, 6);
             this.cboxLevel1.Name = "cboxLevel1";
             this.cboxLevel1.Size = new System.Drawing.Size(68, 17);
             this.cboxLevel1.TabIndex = 0;
@@ -203,6 +205,16 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Database Infrastructure";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // btnDestroyRDS
+            // 
+            this.btnDestroyRDS.Location = new System.Drawing.Point(155, 184);
+            this.btnDestroyRDS.Name = "btnDestroyRDS";
+            this.btnDestroyRDS.Size = new System.Drawing.Size(119, 23);
+            this.btnDestroyRDS.TabIndex = 6;
+            this.btnDestroyRDS.Text = "Destroy Database Infra";
+            this.btnDestroyRDS.UseVisualStyleBackColor = true;
+            this.btnDestroyRDS.Click += new System.EventHandler(this.btnDestroyRDS_Click);
             // 
             // panel1
             // 
@@ -392,15 +404,12 @@
             this.btnCreateVpcConnection.UseVisualStyleBackColor = true;
             this.btnCreateVpcConnection.Click += new System.EventHandler(this.btnCreateVpcConnection_Click);
             // 
-            // btnDestroyRDS
+            // pnlApplicationInstances
             // 
-            this.btnDestroyRDS.Location = new System.Drawing.Point(155, 184);
-            this.btnDestroyRDS.Name = "btnDestroyRDS";
-            this.btnDestroyRDS.Size = new System.Drawing.Size(119, 23);
-            this.btnDestroyRDS.TabIndex = 6;
-            this.btnDestroyRDS.Text = "Destroy Database Infra";
-            this.btnDestroyRDS.UseVisualStyleBackColor = true;
-            this.btnDestroyRDS.Click += new System.EventHandler(this.btnDestroyRDS_Click);
+            this.pnlApplicationInstances.Location = new System.Drawing.Point(36, 83);
+            this.pnlApplicationInstances.Name = "pnlApplicationInstances";
+            this.pnlApplicationInstances.Size = new System.Drawing.Size(878, 110);
+            this.pnlApplicationInstances.TabIndex = 9;
             // 
             // FormHmsSystem
             // 
@@ -465,5 +474,6 @@
         private System.Windows.Forms.Button btnCreateLevel2;
         private System.Windows.Forms.Button btnDestroyLevel1;
         private System.Windows.Forms.Button btnDestroyRDS;
+        private System.Windows.Forms.Panel pnlApplicationInstances;
     }
 }

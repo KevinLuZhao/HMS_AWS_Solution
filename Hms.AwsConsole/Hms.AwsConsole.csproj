@@ -51,6 +51,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contros\Ctrl_ApplicationInstance.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Contros\Ctrl_ApplicationInstance.Designer.cs">
+      <DependentUpon>Ctrl_ApplicationInstance.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormHmsSystem.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -74,6 +80,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Contros\Ctrl_ApplicationInstance.resx">
+      <DependentUpon>Ctrl_ApplicationInstance.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormHmsSystem.resx">
       <DependentUpon>FormHmsSystem.cs</DependentUpon>
     </EmbeddedResource>

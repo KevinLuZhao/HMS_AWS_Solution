@@ -5,6 +5,8 @@ using Hms.AwsConsole.Model;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using System.Threading.Tasks;
+using Hms.AwsConsole.Contros;
 
 namespace Hms.AwsConsole
 {
@@ -79,7 +81,7 @@ namespace Hms.AwsConsole
                     return;
                 }
                 var builder = new ApplicationsLevel1Builder(GlobalVariables.Enviroment.ToString(), this);
-                NotifyToMainStatus("Creating Application Infrascture Level 1 bigin.", System.Drawing.Color.Green);
+                NotifyToMainStatus("Creating Application Infrascture Level 1 begin.", System.Drawing.Color.Green);
                 var response = await builder.Creat();
                 WriteNotification("Application Infrascture Level 1 is created");
                 PopulateData();
@@ -131,7 +133,7 @@ namespace Hms.AwsConsole
                     return;
                 }
                 var builder = new ApplicationsLevel2Builder(appEntities, GlobalVariables.Enviroment.ToString(), this);
-                NotifyToMainStatus("Creating Application Infrastructure Level 2 bigin.", System.Drawing.Color.Green);
+                NotifyToMainStatus("Creating Application Infrastructure Level 2 begin.", System.Drawing.Color.Green);
                 var response = await builder.Creat();
                 WriteNotification("Application Infrastructure Level 2 is created");
             }
@@ -151,7 +153,7 @@ namespace Hms.AwsConsole
                     return;
                 }
                 var builder = new ApplicationsLevel2Builder(appEntities, GlobalVariables.Enviroment.ToString(), this);
-                NotifyToMainStatus("Deleting Application Infrastructure Level 1 bigin.", System.Drawing.Color.Green);
+                NotifyToMainStatus("Deleting Application Infrastructure Level 1 begin.", System.Drawing.Color.Green);
                 await builder.Destroy(appEntities);
                 WriteNotification("Application Infrastructure Level 1 is deleted");
                 PopulateData();
@@ -172,7 +174,7 @@ namespace Hms.AwsConsole
                     return;
                 }
                 var builder = new DBLevel1InfraBuilder(GlobalVariables.Enviroment, this);
-                NotifyToMainStatus("Creating RDS Infrastructure bigin.", System.Drawing.Color.Green);
+                NotifyToMainStatus("Creating RDS Infrastructure begin.", System.Drawing.Color.Green);
                 var response = await builder.Creat();
                 WriteNotification("RDS Infrastructure is created");
             }
@@ -192,9 +194,9 @@ namespace Hms.AwsConsole
                     return;
                 }
                 var builder = new DBLevel1InfraBuilder(GlobalVariables.Enviroment, this);
-                NotifyToMainStatus("Creating RDS Infrastructure bigin.", System.Drawing.Color.Green);
+                NotifyToMainStatus("Deleting RDS Infrastructure begin.", System.Drawing.Color.Green);
                 var response = await builder.Delete(dbEntities);
-                WriteNotification("RDS Infrastructure is created");
+                WriteNotification("RDS Infrastructure is deleted");
             }
             catch (Exception ex)
             {
@@ -218,11 +220,11 @@ namespace Hms.AwsConsole
             appEntities = services.GetApplicationInfraEntities(tsComboEnv.SelectedItem.ToString());
 
             dbEntities = services.GetDbInfraEntities(tsComboEnv.SelectedItem.ToString());
-            LoadApplicationStatus();
+            LoadApplicationInfraStatus();
             LoadDbStatus();
         }
 
-        private void LoadApplicationStatus()
+        private void LoadApplicationInfraStatus()
         {
             
             if (appEntities != null)
@@ -258,6 +260,27 @@ namespace Hms.AwsConsole
             else
             {
                 panel1.Hide();
+            }
+        }
+
+        private async Task LoadApplicationInstances()
+        {
+            if (appEntities != null && appEntities.Instances != null && appEntities.Instances.Count > 0)
+            {
+                var builder = new ApplicationsLevel2Builder(appEntities, GlobalVariables.Enviroment.ToString(), this);
+                while (true)
+                {
+                    pnlApplicationInstances.Controls.Clear();
+                    var instances = await builder.GetAllAppInstances(appEntities);
+                    int counter = 0;
+                    foreach (var instance in instances)
+                    {
+                        var ctrlControl = new Ctrl_ApplicationInstance();
+                        ctrlControl.Location = new System.Drawing.Point( 10 + 200 * counter, 10);
+                        ctrlControl.UpdateUI(instance);
+                        pnlApplicationInstances.Controls.Add(ctrlControl);
+                    }
+                }
             }
         }
 
