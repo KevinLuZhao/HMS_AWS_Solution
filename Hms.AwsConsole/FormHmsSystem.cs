@@ -280,6 +280,15 @@ namespace Hms.AwsConsole
                         ctrlControl.UpdateUI(instance);
                         pnlApplicationInstances.Controls.Add(ctrlControl);
                     }
+                    if (instances.FindIndex(o=>o.state != "available")>=0)
+                    {
+                        await Task.Delay(30000);
+                        continue;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
         }
