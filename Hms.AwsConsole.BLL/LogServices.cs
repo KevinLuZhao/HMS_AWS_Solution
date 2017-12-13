@@ -15,7 +15,7 @@ namespace Hms.AwsConsole.BLL
             {
                 Id = Guid.NewGuid().ToString(),
                 Message = message,
-                LogType = logType,
+                LogType = logType.ToString(),
                 Date = DateTime.Now,
                 User = System.Environment.UserDomainName + "\\" + System.Environment.UserName,
                 CategoryKey = "SafeArrival Admin Toolkits",
@@ -24,9 +24,9 @@ namespace Hms.AwsConsole.BLL
             db.Add(log);
         }
 
-        public static List<Log> GetLogList()
+        public static List<Log> GetLogList(string logType = "", string logKey = "")
         {
-            List<Log> ret = db.GetLogList();
+            List<Log> ret = db.GetLogList(logType, logKey);
             ret.Sort((a, b) => b.Date.CompareTo(a.Date));
             return ret.Take(100).ToList();
         }

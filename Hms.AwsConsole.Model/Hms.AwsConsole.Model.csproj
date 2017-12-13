@@ -42,6 +42,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AwsAppInstanceInfo.cs" />
+    <Compile Include="DynamodbScanCondition.cs" />
+    <Compile Include="DynamodbScanOperator.cs" />
     <Compile Include="AwsPeeringConnection.cs" />
     <Compile Include="AwsRdsInstance.cs" />
     <Compile Include="AwsResourceTypeName.cs" />

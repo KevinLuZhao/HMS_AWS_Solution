@@ -18,9 +18,9 @@ namespace Hms.AwsConsole.DAL
             helper.CreateItem(tableName, obj);
         }
 
-        public List<T> GetList()
+        public List<T> GetList(List<DynamodbScanCondition> hmsScanConditions)
         {
-            return helper.ScanTable(tableName);
+            return helper.ScanTable(tableName, hmsScanConditions);
         }
 
         public T GetItem(string keyValue)

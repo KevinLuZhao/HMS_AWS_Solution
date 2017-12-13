@@ -9,6 +9,8 @@ using Newtonsoft.Json;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2.DataModel;
+using Hms.AwsConsole.Model;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
@@ -16,6 +18,7 @@ namespace Hms.AwsConsole.AwsUtilities
     {
         //public string Environment { get; }
         private AmazonDynamoDBClient client;
+        private DynamoDBContext context;
 
         public DynamoDBHelper()
         {
@@ -23,6 +26,8 @@ namespace Hms.AwsConsole.AwsUtilities
             client = new AmazonDynamoDBClient(
                 credentials,
                 AwsCommon.GetRetionEndpoint("us-east-2"));
+
+            context = new DynamoDBContext(client);
         }
 
         //public DynamoDBHelper(Model.Environment profile, string region)
@@ -80,34 +85,67 @@ namespace Hms.AwsConsole.AwsUtilities
             return client.DescribeTable(tableName).Table.ItemCount;
         }
 
-        public List<T> QueryItems(string tableName, string keyName, string keyValueName, string AttributeValues)
+        //public List<T> QueryItems(
+        //    string tableName, 
+        //    List<KeyValuePair<string, object>> keyExpressionParams, 
+        //    List<KeyValuePair<string, object>> filterExpressionParams)
+        //{
+        //    var retValue = new List<T>();
+
+        //    List<string> lstKeyExpressions = new List<string>();
+        //    foreach (var param in keyExpressionParams)
+        //    {
+        //        lstKeyExpressions.Add()
+        //    }
+        //    string.Join()
+        //    var request = new QueryRequest
+        //    {
+        //        TableName = tableName,
+        //        KeyConditionExpression = keyName + " = " + keyValueName,
+        //        ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+        //        {
+        //            {keyValueName, new AttributeValue { S =  AttributeValues }}
+        //        }
+        //    };
+
+        //    var response = client.Query(request);
+
+        //    foreach (var item in response.Items)
+        //    {
+        //        retValue.Add(ConvertTableItemToInstance(item));
+        //    }
+        //    return retValue;
+        //}
+
+        public List<T> ScanTable(string tableName, List<DynamodbScanCondition> hmsScanConditions)
         {
             var retValue = new List<T>();
-            var request = new QueryRequest
+            //var scanConditions = new List<ScanCondition>();
+            //foreach (var hmsScanCondition in hmsScanConditions)
+            //{
+            //    scanConditions.Add(new ScanCondition(
+            //        hmsScanCondition.AttributeName,
+            //        //(ScanOperator)Enum.Parse(typeof(ScanOperator), hmsScanCondition.Operator.ToString()),
+            //        ScanOperator.Equal,
+            //        hmsScanCondition.Value 
+            //        ));
+            //}
+            //var x = context.Scan<T>(scanConditions.ToArray());
+            //retValue = context.Scan<T>(scanConditions.ToArray()).ToList();
+            var filterConditions = new Dictionary<string, Condition>();
+            foreach (var hmsCondition in hmsScanConditions)
             {
-                TableName = tableName,
-                KeyConditionExpression = keyName + " = " + keyValueName,
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                List<AttributeValue> val = new List<AttributeValue>();
+                val.Add(new AttributeValue(hmsCondition.Value.ToString()));
+                Condition condition = new Condition()
                 {
-                    {keyValueName, new AttributeValue { S =  AttributeValues }}
-                }
-            };
-
-            var response = client.Query(request);
-
-            foreach (var item in response.Items)
-            {
-                retValue.Add(ConvertTableItemToInstance(item));
+                    AttributeValueList = val,
+                    ComparisonOperator = ComparisonOperator.FindValue(hmsCondition.Operator.ToString())
+                };
+                filterConditions.Add(hmsCondition.AttributeName, condition);
             }
-            return retValue;
-        }
-
-        public List<T> ScanTable(string tableName)
-        {
-            var retValue = new List<T>();
-            //var client = new AmazonDynamoDBClient(CredentiaslManager.GetDynamoDbCredential(), AwsCommon.GetRetionEndpoint("us-east-2"));
-            var request = new ScanRequest(tableName);
-            var response = client.Scan(request);
+            //var request = new ScanRequest(tableName);
+            var response = client.Scan(tableName, filterConditions);
             foreach (var item in response.Items)
             {
                 retValue.Add(ConvertTableItemToInstance(item));
@@ -122,6 +160,7 @@ namespace Hms.AwsConsole.AwsUtilities
             {
                 TableName = tableName,
                 Key = new Dictionary<string, AttributeValue>() { { primaryKeyName, new AttributeValue { S = primaryKeyValue } } },
+                //ReturnConsumedCapacity.
             };
             var response = client.GetItem(request);
 

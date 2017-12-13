@@ -17,9 +17,28 @@ namespace Hms.AwsConsole.DAL
             helper.CreateItem(tableName, obj);
         }
 
-        public List<Log> GetLogList()
+        public List<Log> GetLogList(string logType, string logKey)
         {
-            return helper.ScanTable("hms_logs");
+            var conditions = new List<DynamodbScanCondition>();
+            if (!string.IsNullOrEmpty(logType.ToString()))
+            {
+                conditions.Add(new DynamodbScanCondition()
+                {
+                    AttributeName = "LogType",
+                    Operator = DynamodbScanOperator.EQ,
+                    Value = logType
+                });
+            }
+            if (!string.IsNullOrEmpty(logKey.ToString()))
+            {
+                conditions.Add(new DynamodbScanCondition()
+                {
+                    AttributeName = "LogKey",
+                    Operator = DynamodbScanOperator.EQ,
+                    Value = logKey
+                });
+            }
+            return helper.ScanTable("hms_logs", conditions);
         }
     }
 }
