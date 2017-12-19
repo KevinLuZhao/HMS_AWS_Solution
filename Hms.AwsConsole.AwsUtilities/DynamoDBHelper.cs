@@ -1,16 +1,11 @@
 ﻿using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Runtime;
-using Amazon.Runtime.CredentialManagement;
+using Hms.AwsConsole.Model;
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Amazon.DynamoDBv2.DataModel;
-using Hms.AwsConsole.Model;
 
 namespace Hms.AwsConsole.AwsUtilities
 {
@@ -22,12 +17,20 @@ namespace Hms.AwsConsole.AwsUtilities
 
         public DynamoDBHelper()
         {
-            Amazon.Runtime.AWSCredentials credentials = new StoredProfileAWSCredentials("safemail");
-            client = new AmazonDynamoDBClient(
-                credentials,
-                AwsCommon.GetRetionEndpoint("us-east-2"));
+            try
+            {
+                Amazon.Runtime.AWSCredentials credentials = new StoredProfileAWSCredentials("safemail");
+                client = new AmazonDynamoDBClient(
+                    credentials,
+                    AwsCommon.GetRetionEndpoint("us-east-2"));
 
-            context = new DynamoDBContext(client);
+                context = new DynamoDBContext(client);
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
         }
 
         //public DynamoDBHelper(Model.Environment profile, string region)
@@ -117,35 +120,31 @@ namespace Hms.AwsConsole.AwsUtilities
         //    return retValue;
         //}
 
-        public List<T> ScanTable(string tableName, List<DynamodbScanCondition> hmsScanConditions)
+        public List<T> ScanTable(string tableName, List<DynamodbScanCondition> hmsScanConditions = null)
         {
             var retValue = new List<T>();
-            //var scanConditions = new List<ScanCondition>();
-            //foreach (var hmsScanCondition in hmsScanConditions)
-            //{
-            //    scanConditions.Add(new ScanCondition(
-            //        hmsScanCondition.AttributeName,
-            //        //(ScanOperator)Enum.Parse(typeof(ScanOperator), hmsScanCondition.Operator.ToString()),
-            //        ScanOperator.Equal,
-            //        hmsScanCondition.Value 
-            //        ));
-            //}
-            //var x = context.Scan<T>(scanConditions.ToArray());
-            //retValue = context.Scan<T>(scanConditions.ToArray()).ToList();
-            var filterConditions = new Dictionary<string, Condition>();
-            foreach (var hmsCondition in hmsScanConditions)
+            ScanResponse response;
+            if (hmsScanConditions != null)
             {
-                List<AttributeValue> val = new List<AttributeValue>();
-                val.Add(new AttributeValue(hmsCondition.Value.ToString()));
-                Condition condition = new Condition()
+                var filterConditions = new Dictionary<string, Condition>();
+                foreach (var hmsCondition in hmsScanConditions)
                 {
-                    AttributeValueList = val,
-                    ComparisonOperator = ComparisonOperator.FindValue(hmsCondition.Operator.ToString())
-                };
-                filterConditions.Add(hmsCondition.AttributeName, condition);
+                    List<AttributeValue> val = new List<AttributeValue>();
+                    val.Add(new AttributeValue(hmsCondition.Value.ToString()));
+                    Condition condition = new Condition()
+                    {
+                        AttributeValueList = val,
+                        ComparisonOperator = ComparisonOperator.FindValue(hmsCondition.Operator.ToString())
+                    };
+                    filterConditions.Add(hmsCondition.AttributeName, condition);
+                }
+                //var request = new ScanRequest(tableName);
+                response = client.Scan(tableName, filterConditions);
             }
-            //var request = new ScanRequest(tableName);
-            var response = client.Scan(tableName, filterConditions);
+            else
+            {
+                response = client.Scan(tableName, new Dictionary<string, Condition>());
+            }
             foreach (var item in response.Items)
             {
                 retValue.Add(ConvertTableItemToInstance(item));

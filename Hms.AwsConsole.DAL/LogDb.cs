@@ -17,10 +17,10 @@ namespace Hms.AwsConsole.DAL
             helper.CreateItem(tableName, obj);
         }
 
-        public List<Log> GetLogList(string logType, string logKey)
+        public List<Log> GetLogList(string env, string logType, string message)
         {
             var conditions = new List<DynamodbScanCondition>();
-            if (!string.IsNullOrEmpty(logType.ToString()))
+            if (!string.IsNullOrEmpty(logType))
             {
                 conditions.Add(new DynamodbScanCondition()
                 {
@@ -29,13 +29,22 @@ namespace Hms.AwsConsole.DAL
                     Value = logType
                 });
             }
-            if (!string.IsNullOrEmpty(logKey.ToString()))
+            if (!string.IsNullOrEmpty(env))
             {
                 conditions.Add(new DynamodbScanCondition()
                 {
                     AttributeName = "LogKey",
                     Operator = DynamodbScanOperator.EQ,
-                    Value = logKey
+                    Value = env
+                });
+            }
+            if (!string.IsNullOrEmpty(message))
+            {
+                conditions.Add(new DynamodbScanCondition()
+                {
+                    AttributeName = "Message",
+                    Operator = DynamodbScanOperator.CONTAINS,
+                    Value = message
                 });
             }
             return helper.ScanTable("hms_logs", conditions);

@@ -13,7 +13,7 @@ namespace Hms.AwsConsole
 
         public virtual void HandleException(Exception ex)
         {
-            LogServices.WriteLog(ex.Message + " Stack Trace: " + ex.StackTrace, Model.LogType.Error, GlobalVariables.Enviroment.ToString());
+            //LogServices.WriteLog(ex.Message + " Stack Trace: " + ex.StackTrace, Model.LogType.Error, GlobalVariables.Enviroment.ToString());
             NotifyToMainStatus(ex.Message, System.Drawing.Color.Red);
         }
 

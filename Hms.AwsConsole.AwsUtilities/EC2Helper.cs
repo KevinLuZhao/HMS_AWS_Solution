@@ -613,7 +613,7 @@ namespace Hms.AwsConsole.AwsUtilities
                 Name = name,
                 PublicIP = instance.PublicIpAddress,
                 PrivateIP = instance.PrivateIpAddress,
-                state = instance.StateReason.Code
+                state = instance.State.Name
             };
         }
 
